@@ -1,0 +1,2914 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>slang.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="slang.html">
+                  slang.js
+                </a>
+              
+                
+                <a class="source" href="slang_concurrency.html">
+                  slang_concurrency.js
+                </a>
+              
+                
+                <a class="source" href="slang_objects.html">
+                  slang_objects.js
+                </a>
+              
+                
+                <a class="source" href="slang_parse.html">
+                  slang_parse.js
+                </a>
+              
+                
+                <a class="source" href="slang_vocab.html">
+                  slang_vocab.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>slang.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>% The No Spoon Series : Building Slang
+% Srikumar K. S.
+% 21 Feb 2017</p>
+<h1 id="building-slang">Building Slang</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>In this series, we will gradually work through implementing an interpreter
+for a small programming language in Javascript.  The goal is to understand
+language “features” whose needs arise at various points and the how various
+languages trade off these features in their implementations. We aim to
+understand them so that we can invent the most appropriate tool for the job
+at hand in any occasion instead of boxing ourselves into the limitations of
+a design made for another context. We’ll be working towards a pretty
+powerful feature set, but efficiency will not be one of our initial
+concerns. The goal will be to understand how to think out of the box no
+matter what programming language or toolkit you’re working with.</p>
+<blockquote>
+<p><strong>Note</strong>: This file is written in a “stream of thought” style so you can
+follow along from top to bottom as we add more detail. You can pretty much
+draw a line at any point in the code, copy paste everything before that line
+into a javascript console and run it. I say “pretty much” because some
+concepts and implementations will take a few steps to flesh out, so
+“pretty much” means “as long as everything you need has been defined”.</p>
+<p>-Srikumar</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>We use ES6 features like <code>let</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-meta">"use strict"</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <h2 id="application-area">Application area</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>While working through this, we’ll keep in mind a simple application of the
+language we’ll be building - a drawing tool that works within web browsers. As
+we do more advanced stuff, we’ll be going beyond this application area, but
+those transition points will be well defined.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <h2 id="approach">Approach</h2>
+<p>Normally, when learning a programming language, we learn first about its
+<em>syntax</em> - which is how the language looks, then delve a little deeper into its
+<em>semantics</em> - which is how the language works and behaves and later on work out
+a <em>mental model</em> for the language so we can understand programs in it and use
+the language syntax and semantics for effective system design.</p>
+<p>In this series, we’ll be going the other way around. We won’t bother ourselves
+with pretty syntax, but we’ll start with a mental model of programming and work
+out a viable semantics for a language and only then slap a syntax on it purely
+for convenience.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <h2 id="the-mental-model">The mental model</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p><strong>Program</strong>: Our program will be .. a sequence of instructions we give our
+interpreter to perform. Simple eh? We read instructions one by one and
+“execute” them. This will be how our “interpreter” will work.</p>
+<p><strong>Environment</strong>: The instructions our program runs will do their job within the
+context of an environment. Making this environment explicit is very useful to
+making multiple runtimes co-exist by creating different environments for them.</p>
+<p><strong>Stack</strong>: Our programs will operate on a <em>stack</em> of values.  Programs will
+have immediate access to the top elements of the stack, but will have to pop
+out elements in order to look any deeper.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <h2 id="values">Values</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>We break down our language into the values that our programs work
+with and choose basic data structures for representing our program
+as well as the stack that they operate on.</p>
+<p>So what values will our program need to deal with? If you think about drawing
+applications, at the minimum we need numbers to represent coordinates and
+strings to include text. We’re also likely to encounter repeated patterns. So
+we need some ways of giving names to these patterns so we can reuse them. We’ll
+also have some operations that we initially won’t be able to perform in our
+language and will need to dig into the “host language” - in this case
+Javascript - to perform.  We’ll call these “primitives”.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>We’ll represent values of these types using a simple Javascript Object with two
+fields <code>t</code> for “type” and <code>v</code> for “value”.</p>
+<p>We can use these functions to make values that our programs can consume.
+By using these functions, we’re guaranteeing that we’ll supply proper argument
+types so our programs can, for example, trust that the <code>v</code> field will be a
+number if the <code>t</code> field has the value <code>&quot;number&quot;</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> number = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">v</span>)  </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'number'</span>, <span class="hljs-attr">v</span>: v};  },
+    string = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">v</span>)  </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'string'</span>, <span class="hljs-attr">v</span>: v};  },
+    word   = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">v</span>)  </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'word'</span>,   <span class="hljs-attr">v</span>: v};  },
+    prim   = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">fn</span>) </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'prim'</span>,   <span class="hljs-attr">v</span>: fn}; };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>If you look carefully into what we’ve done here, we’ve already committed to
+something pretty big! These are the entities using which we’ll be expressing
+the values that our programs will operate on. They are also the entities
+using which we’ll express our programs! Though we’ll be expanding on this
+set, we’ll try and preserve this symmetry as far down the line as makes
+sense for our purpose.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <h2 id="running-a-program">Running a program</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Recall that we said our program is a sequence of instructions we process
+one by one. We can represent our program therefore using a plain old
+Javascript array, along with a “program counter” which is an index into
+the array of instructions to execute next. The stack that our program needs
+to work on can also be represented by an array.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> run = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>So how do we run our program? It is just as the Red Queen said to the
+White Rabbit in Alice in Wonderland - “Start at the beginning, go on
+until you reach the end, then stop.”</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">for</span> (; pc &lt; program.length; ++pc) {
+        <span class="hljs-keyword">let</span> instr = program[pc];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>When an instruction is a “word”, we need to use it as a key to lookup
+a value in our environment. Once we look it up, we have to treat it
+as though this value occurred in our program as a literal, which means
+treating it as an instruction and processing it.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (instr.t === <span class="hljs-string">'word'</span>) {
+            <span class="hljs-keyword">let</span> deref = lookup(env, instr);
+            <span class="hljs-keyword">if</span> (!deref) {
+                <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Undefined word "'</span> + instr.v + <span class="hljs-string">'" at instruction '</span> + pc);
+            }
+            instr = deref;
+        }
+
+        <span class="hljs-keyword">switch</span> (instr.t) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>When we encounter a primitive operation given as a Javascript function,
+we have to pass it our stack so that it can do whatever it needs to do
+with the values stored on the stack.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:
+                stack = apply(instr, stack);
+                <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>In all other cases we just store the value on the stack.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">default</span>:
+                push(stack, instr);
+                <span class="hljs-keyword">break</span>;
+        }
+    }
+
+    <span class="hljs-keyword">return</span> stack;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>… and that’s it for our first interpreter!</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <h2 id="looking-up-words-and-performing-primitive-operations">Looking up words and performing primitive operations</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>Since our simple idea of an environment is as a key-value lookup table,
+we use a plain Javascript object as our environment. We’ll capture this
+assumption in a function to create a new environment from scratch.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> mk_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">return</span> {}; <span class="hljs-comment">// A new hash map for key-value associations.</span>
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>With such an “environment”, we get a simple lookup function -</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> lookup = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, word</span>) </span>{
+    <span class="hljs-built_in">console</span>.assert(word.t === <span class="hljs-string">'word'</span>);
+    <span class="hljs-keyword">return</span> env[word.v];
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>Associate the value with the given key and returns the environment.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> define = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, key, value</span>) </span>{
+    env[key] = value;
+    <span class="hljs-keyword">return</span> env;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>For generality, we can model primitive operations as functions on our
+stack. </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> apply = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, prim, stack</span>) </span>{
+    <span class="hljs-built_in">console</span>.assert(prim.t === <span class="hljs-string">'prim'</span>);
+    <span class="hljs-keyword">return</span> prim.v(env, stack);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Question</strong>: What limitations does this definition impose on
+what a primitive function can do?</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>We’ll also abstract the stack operations to keep things flexible.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> push = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack, item</span>) </span>{
+    stack.push(item);
+    <span class="hljs-keyword">return</span> stack;
+};
+
+<span class="hljs-keyword">let</span> pop = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+    <span class="hljs-keyword">return</span> stack.pop();
+};
+
+<span class="hljs-keyword">let</span> topitem = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+    <span class="hljs-keyword">return</span> stack[stack.length - <span class="hljs-number">1</span>];
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>It is useful to look a little deeper into the stack.
+So we add another function to peek deeper than the topmost
+element.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> topi = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack, i</span>) </span>{
+    <span class="hljs-keyword">return</span> stack[stack.length - <span class="hljs-number">1</span> - i];
+};
+
+<span class="hljs-keyword">let</span> depth = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+    <span class="hljs-keyword">return</span> stack.length;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>For simplicity, we assume that our primitives do not throw exceptions.
+In fact, we will not bother with exceptions at all. Forget that they were
+even mentioned here!</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <h3 id="testing-our-mini-language">Testing our mini language</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>Let’s quickly write a few functions to express how we intend to run
+our programs and what we’ll expect of them.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>We’ll hold all our tests in a single hash table mapping the test
+name to the test function to be called.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> tests = {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>The smoke_test function should produce a stack with a single item
+on it - the number 3.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>tests.smoke = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>We start with an empty environment, load our standard library of
+routines into it and use it to run our “program” that adds 1 and 2
+and returns the stack with the result.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">let</span> env = load_stdlib(mk_env());
+    
+    <span class="hljs-keyword">let</span> program = [
+        number(<span class="hljs-number">1</span>),      <span class="hljs-comment">// Push 1 on to the stack</span>
+        number(<span class="hljs-number">2</span>),      <span class="hljs-comment">// Push 2 on to the stack</span>
+        word(<span class="hljs-string">'+'</span>)       <span class="hljs-comment">// Apply '+' operation on top two elements.</span>
+    ];
+
+    <span class="hljs-keyword">return</span> run(env, program, <span class="hljs-number">0</span>, []);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <h3 id="displaying-the-stack-for-debugging">Displaying the stack for debugging</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>A helper function to show the top n elements of the stack on the console.
+The count defaults to 20.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> show = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack, n</span>) </span>{
+    n = <span class="hljs-built_in">Math</span>.min(n || <span class="hljs-number">20</span>, depth(stack)); <span class="hljs-comment">// Default to 20 elements.</span>
+
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; n; ++i) {
+        show_item(topi(stack, i));
+    }
+};
+
+<span class="hljs-keyword">let</span> show_item = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">item</span>) </span>{
+    <span class="hljs-keyword">switch</span> (item.t) {
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'string'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>We need to properly escape characters, so we use stringify only for strings.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">return</span> <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'string('</span> + <span class="hljs-built_in">JSON</span>.stringify(item.v) + <span class="hljs-string">')'</span>);
+        <span class="hljs-keyword">default</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>Everything else, we let the default display routine take over.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">return</span> <span class="hljs-built_in">console</span>.log(item.t + <span class="hljs-string">'('</span> + item.v + <span class="hljs-string">')'</span>);
+    }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <h2 id="standard-library">Standard library</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>We’ll choose a very basic standard library consisting of 4 arithmetic
+operations to start with. We’ll expand this set, but we’re too impatient
+to get to try out our new fangled “language” that we’re willing to wait
+for that coolness.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> load_stdlib = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>Basic arithmetic operators for starters.
+Note the order in which the arguments are retrieved.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+    define(env, <span class="hljs-string">'+'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, number(x.v + y.v));
+    }));
+
+    define(env, <span class="hljs-string">'-'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, number(x.v - y.v));
+    }));
+
+    define(env, <span class="hljs-string">'*'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, number(x.v * y.v));
+    }));
+
+    define(env, <span class="hljs-string">'/'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, number(x.v / y.v));
+    }));
+
+    <span class="hljs-keyword">return</span> env;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <h3 id="test-distance-calculation">Test distance calculation</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>To calculate the distance between two points on a 2D plane,
+we need a new primitive - the square root function.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>First, a small utility to add new definitions to our 
+<code>load_stdlib</code> function. <code>new_defns</code> is expected to be
+a function that takes an environment, defines some things
+into it and returns the environment.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> stddefs = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">new_defns</span>) </span>{
+    load_stdlib = (<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">load_first</span>) </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+            <span class="hljs-keyword">return</span> new_defns(load_first(env)) || env;
+        };
+    }(load_stdlib));
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <p>Augment our “standard library” with a new ‘sqrt’ primitive function.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>We’ll not be able to express x * x without the
+ability to duplicate the top value on the stack.
+We could also add ‘pow’ as a primitive for that
+specific case.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'dup'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">return</span> push(stack, topitem(stack));
+    }));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>Similarly, we could use ‘drop’ also to take off
+elements from the stack without doing anything with them.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'drop'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        pop(stack);
+        <span class="hljs-keyword">return</span> stack;
+    }));
+
+    define(env, <span class="hljs-string">'sqrt'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, number(<span class="hljs-built_in">Math</span>.sqrt(x.v)));
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>We always want the standard library for tests, so simplify it
+with a function.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> test_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">return</span> load_stdlib(mk_env());
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>Now we can finally calculate the distance between two points.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>tests.distance = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">x1, y1, x2, y2</span>) </span>{
+    <span class="hljs-keyword">let</span> program = [
+        number(x1),     <span class="hljs-comment">// Store x1</span>
+        number(x2),     <span class="hljs-comment">// Store x2</span>
+        word(<span class="hljs-string">'-'</span>),      <span class="hljs-comment">// Take the difference</span>
+        word(<span class="hljs-string">'dup'</span>),    <span class="hljs-comment">// 'dup' followed by '*' will square it.</span>
+        word(<span class="hljs-string">'*'</span>),
+        number(y1),     <span class="hljs-comment">// Store y1</span>
+        number(y2),     <span class="hljs-comment">// Store y2</span>
+        word(<span class="hljs-string">'-'</span>),      <span class="hljs-comment">// Take the difference</span>
+        word(<span class="hljs-string">'dup'</span>),    <span class="hljs-comment">// 'dup' followed by '*' will square it.</span>
+        word(<span class="hljs-string">'*'</span>),      
+        word(<span class="hljs-string">'+'</span>),      <span class="hljs-comment">// Sum of the two squares.</span>
+        word(<span class="hljs-string">'sqrt'</span>)    <span class="hljs-comment">// The square root of that.</span>
+    ];
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, []);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <h1 id="developing-abstractions">Developing Abstractions</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <p>We now have a simple language “slang” in which we can give a sequence of
+instructions to be “performed” by the interpreter and it will faithfully
+run through and do it one by one. </p>
+<p>This is great for a basic calculator, but for anything with a bit of
+complexity, this is inadequate since we <strong>want</strong> to be able to build
+higher levels of abstraction as we work with on more complicated problems.</p>
+<p>Let’s recall the distance calculation program we wrote earlier -</p>
+<pre><code class="lang-js"><span class="hljs-keyword">let</span> program = [
+       number(x1),     <span class="hljs-comment">// Store x1</span>
+       number(x2),     <span class="hljs-comment">// Store x2</span>
+       word(<span class="hljs-string">'-'</span>),      <span class="hljs-comment">// Take the difference</span>
+       word(<span class="hljs-string">'dup'</span>),    <span class="hljs-comment">// 'dup' followed by '*' will square it.</span>
+       word(<span class="hljs-string">'*'</span>),
+       number(y1),     <span class="hljs-comment">// Store y1</span>
+       number(y2),     <span class="hljs-comment">// Store y2</span>
+       word(<span class="hljs-string">'-'</span>),      <span class="hljs-comment">// Take the difference</span>
+       word(<span class="hljs-string">'dup'</span>),    <span class="hljs-comment">// 'dup' followed by '*' will square it.</span>
+       word(<span class="hljs-string">'*'</span>),      
+       word(<span class="hljs-string">'+'</span>),      <span class="hljs-comment">// Sum of the two squares.</span>
+       word(<span class="hljs-string">'sqrt'</span>)    <span class="hljs-comment">// The square root of that.</span>
+   ];
+</code></pre>
+<p>This is cheating a bit actually. We’re inserting values directly into a
+program as though they were constants. If we were to truly express this as
+a reusable function, then we’ll need to make it operate on the top 4
+values on the stack - <code>[y2, x2, y1, x1, ...]</code> and produce the distance
+as a result on the stack.</p>
+<p>Since our environment can hold key-value associations, we can add a primitive
+that will insert these mappings into the current environment.</p>
+<p>We need two things for that - a) a way to specify a “symbol” and 
+b) a primitive to assign the symbol to a value in the current environment.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <p>We introduce a new value type called ‘symbol’ which is similar to a ‘word’,
+except that it will always refer to itself when “evaluated” - i.e. if you ask
+our interpreter the value of a symbol, it will simply return the symbol itself,
+unlike a word.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> symbol = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">name</span>) </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'symbol'</span>, <span class="hljs-attr">v</span>: name}; };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>At this point, our interpreter only has special dealings for ‘word’ and ‘prim’
+types. Everything else gets pushed on to the stack. So the interpreter already
+knows how to work with symbols. What we need is a way to use a symbol name
+and bind it to a value. For this, we add a new primitive to our standard library
+called ‘def’.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'def'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> sym = pop(stack), val = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(sym.t === <span class="hljs-string">'symbol'</span>);
+        define(env, sym.v, val);
+        <span class="hljs-keyword">return</span> stack;
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <blockquote>
+<p>That seems fine and will also work fine in basic tests. However, there is
+a subtlety here. The way we’ve implemented the <code>def</code> primitive, the value
+assignment will <em>always</em> happen in the top level environment! For the
+moment, that is ok. We’ll improve this soon as we realize that programs
+become hard to reason about if references are implemented globally all the
+time. This is the same as the “no global variables” rule most of you follow.</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <p>With symbols and <code>def</code>, we can now implement a proper distance calculator.
+The new tests.distance will need to be called like this -
+<code>tests.distance2([2,4,6,7].map(number))</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+tests.distance2 = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+    <span class="hljs-keyword">let</span> program = [</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-55">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-55">&#182;</a>
+              </div>
+              <p>We name our four arguments and consume them from the stack.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        symbol(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'def'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-56">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-56">&#182;</a>
+              </div>
+              <p>Calc square of x1 - x2</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'x2'</span>),
+        word(<span class="hljs-string">'-'</span>), word(<span class="hljs-string">'dup'</span>), word(<span class="hljs-string">'*'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-57">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-57">&#182;</a>
+              </div>
+              <p>Calc square of y1 - y2</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'y2'</span>),
+        word(<span class="hljs-string">'-'</span>), word(<span class="hljs-string">'dup'</span>), word(<span class="hljs-string">'*'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-58">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-58">&#182;</a>
+              </div>
+              <p>Sum and sqroot.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        word(<span class="hljs-string">'+'</span>),
+        word(<span class="hljs-string">'sqrt'</span>)
+    ];
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, stack);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-59">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-59">&#182;</a>
+              </div>
+              <p>Now you see that the entire program within <code>tests.distance</code> is a
+<strong>constant</strong> array, unlike what it was before when parts of the program
+depended on the arguments to the distance function. We can actually store
+this into disk and load it and use it at will.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-60">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-60">&#182;</a>
+              </div>
+              <h2 id="blocks">Blocks</h2>
+<p>We see a sequence occuring twice exactly as is -</p>
+<pre><code class="lang-js"><span class="hljs-keyword">let</span> program = [
+        ...
+        word(<span class="hljs-string">'-'</span>), word(<span class="hljs-string">'dup'</span>), word(<span class="hljs-string">'*'</span>),
+        ...
+        word(<span class="hljs-string">'-'</span>), word(<span class="hljs-string">'dup'</span>), word(<span class="hljs-string">'*'</span>)
+        ...
+   ];
+</code></pre>
+<p>Any time you see this specific sequence, you know that the top two 
+elements of the stack will be differenced and squared. In other words,
+this sequence behaves like the following function - a primitive, if
+we were to implement in javascript -</p>
+<pre><code class="lang-js"><span class="hljs-keyword">let</span> diffsq = prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+    <span class="hljs-keyword">let</span> x2 = pop(stack), x1 = pop(stack);
+    <span class="hljs-keyword">let</span> dx = x1.v - x2.v;
+    push(stack, number(dx * dx));
+});
+</code></pre>
+<p>We could replace those three sequences with <code>diffsq</code> and nobody would notice
+anything different .. except maybe the processor which would have to do more
+work with our interpreter.</p>
+<p>It therefore seems pertinent to introduce a block of instructions as a
+type of thing we can store on the stack and assign to symbols in an
+environment, so we can reuse such blocks whenever we need them instead
+of having to copy paste the code like we’ve done here.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-61">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-61">&#182;</a>
+              </div>
+              <p>We have to introduce a new value type called ‘block’ for this purpose,
+which holds a program to jump into part-way when the interpreter encounters
+it.  We also have to introduce a primitive for “performing” a block 
+encountered on a stack. We’ll call this primitive <code>do</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> block = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">program</span>) </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'block'</span>, <span class="hljs-attr">v</span>: program}; };
+
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'do'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> program = pop(stack);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-62">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-62">&#182;</a>
+              </div>
+              <p>If we’ve been given a primitive, we call it directly.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (program.t === <span class="hljs-string">'prim'</span>) {
+            <span class="hljs-keyword">return</span> program.v(env, stack);
+        }
+
+        <span class="hljs-built_in">console</span>.assert(program.t === <span class="hljs-string">'block'</span>);
+        <span class="hljs-keyword">return</span> run(env, program.v, <span class="hljs-number">0</span>, stack);
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-63">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-63">&#182;</a>
+              </div>
+              <p>We can now rewrite our distance function with some more abstraction.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+tests.distance3 = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+    <span class="hljs-keyword">let</span> program = [</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-64">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-64">&#182;</a>
+              </div>
+              <p>We define a “difference and square” subprogram</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        block([word(<span class="hljs-string">'-'</span>), word(<span class="hljs-string">'dup'</span>), word(<span class="hljs-string">'*'</span>)]), symbol(<span class="hljs-string">'dsq'</span>), word(<span class="hljs-string">'def'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-65">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-65">&#182;</a>
+              </div>
+              <p>We name our four arguments and consume them from the stack.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        symbol(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'def'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-66">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>Calc square of x1 - x2</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'dsq'</span>), word(<span class="hljs-string">'do'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <p>Calc square of y1 - y2</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'dsq'</span>), word(<span class="hljs-string">'do'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
+              </div>
+              <p>Sum and sqroot.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        word(<span class="hljs-string">'+'</span>), word(<span class="hljs-string">'sqrt'</span>)
+    ];
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, stack);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-69">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-69">&#182;</a>
+              </div>
+              <h1 id="scoping-and-control-structures">Scoping and Control Structures</h1>
+<p><strong>Date</strong>: 28 Feb 2017</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-70">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-70">&#182;</a>
+              </div>
+              <p>What we had to do with <code>do</code> is still not quite satisfactory. We’re now
+forced to distinguish between when a word is a primitive and when it is a
+“user-defined” block to be run using <code>do</code>. We don’t really want this
+distinction.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-71">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-71">&#182;</a>
+              </div>
+              <p>We’ll define a separate primitive called <code>defun</code> which will behave just like
+def, but must be used with blocks so that referring to these “defined
+functions” does not require an explicit <code>do</code> to perform them.</p>
+<p>The disadvantage of <code>defun</code> folding the <code>do</code> operation is that we can 
+no longer treat the block as a value. The only thing we can do with a
+<code>defun</code>d block is to execute it.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'defun'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> sym = pop(stack), program = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(sym.t === <span class="hljs-string">'symbol'</span>);
+        <span class="hljs-built_in">console</span>.assert(program.t === <span class="hljs-string">'block'</span>);
+        define(env, sym.v, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+            <span class="hljs-keyword">return</span> run(env, program.v, <span class="hljs-number">0</span>, stack);
+        }));
+        <span class="hljs-keyword">return</span> stack;
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-72">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-72">&#182;</a>
+              </div>
+              <p>With this <code>defun</code>, we can simplify the distance calculation program to -</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+tests.distance4 = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+    <span class="hljs-keyword">let</span> program = [</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-73">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-73">&#182;</a>
+              </div>
+              <p>We define a “difference and square” subprogram</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        block([word(<span class="hljs-string">'-'</span>), word(<span class="hljs-string">'dup'</span>), word(<span class="hljs-string">'*'</span>)]), symbol(<span class="hljs-string">'diffsq'</span>), word(<span class="hljs-string">'defun'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-74">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-74">&#182;</a>
+              </div>
+              <p>We name our four arguments and consume them from the stack.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        symbol(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'def'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-75">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-75">&#182;</a>
+              </div>
+              <p>Calc square of x1 - x2</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'diffsq'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-76">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-76">&#182;</a>
+              </div>
+              <p>Calc square of y1 - y2</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'diffsq'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-77">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-77">&#182;</a>
+              </div>
+              <p>Sum and sqroot.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        word(<span class="hljs-string">'+'</span>), word(<span class="hljs-string">'sqrt'</span>)
+    ];
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, stack);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-78">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-78">&#182;</a>
+              </div>
+              <h2 id="control-structures">Control structures</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-79">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-79">&#182;</a>
+              </div>
+              <p>We now have a concept of blocks and we can use them to implement
+simple control structures like if-then-else and while. We’re going
+to need some comparison operators to work with and we need a boolean
+type.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> bool = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">b</span>) </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'bool'</span>, <span class="hljs-attr">v</span>: b}; };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-80">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-80">&#182;</a>
+              </div>
+              <p>Languages differ in how they choose to define a boolean type
+based on what notion of “type” is implemented. In our case, we’re
+treating a boolean like an enumeration where the <code>v:</code> part
+tells what the value actually is. Dynamic object-oriented languages
+may implement this idea by defining a separate ‘true’ type and
+a ‘false’ type.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'true'</span>, bool(<span class="hljs-literal">true</span>));
+    define(env, <span class="hljs-string">'false'</span>, bool(<span class="hljs-literal">false</span>));
+    
+    define(env, <span class="hljs-string">'&gt;'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(x.v &gt; y.v));
+    }));
+
+    define(env, <span class="hljs-string">'&lt;'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(x.v &lt; y.v));
+    }));
+
+    define(env, <span class="hljs-string">'&gt;='</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(x.v &gt;= y.v));
+    }));
+
+    define(env, <span class="hljs-string">'&lt;='</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(x.v &lt;= y.v));
+    }));
+
+    define(env, <span class="hljs-string">'='</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(x.v === y.v));
+    }));
+
+    define(env, <span class="hljs-string">'!='</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(x.v !== y.v));
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-81">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-81">&#182;</a>
+              </div>
+              <p>We’ll also need some binary combining operators for booleans.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'and'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(x.v &amp;&amp; y.v));
+    }));
+
+    define(env, <span class="hljs-string">'or'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(x.v || y.v));
+    }));
+
+    define(env, <span class="hljs-string">'not'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(!x.v));
+    }));
+
+    define(env, <span class="hljs-string">'either'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> y = pop(stack), x = pop(stack);
+        <span class="hljs-keyword">return</span> push(stack, bool(x.v ? !y.v : y.v));
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-82">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-82">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Question</strong>: What would be some advantages/disadvantages of
+defining the boolean combining operators in the above manner?
+For example, in the expression “a and b”, if the “a” part ends
+up being false, then the “b” part doesn’t even need to be
+evaluated. This is called <em>short circuiting</em>. A similar behaviour
+holds for the “or” and “either” operators too. Such short circuiting
+prevents unnecesary computations from happening. How would you
+re-design and re-implement these operators to have short
+circuiting behaviour?</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-83">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-83">&#182;</a>
+              </div>
+              <p>We’ll implement a generic branching mechanism that checks a set of
+conditions associated with actions and performs the first set of actions
+whose condition evaluates to a true value. This will be implemented using a
+<code>cond</code> primitive.  However, contrary to other primitives we’ve implemented
+thus far, this one will take a block argument with a specific structure - a
+sequence of condition/consequence pairs each of which is itself represented
+using a block.  The condition blocks are expected to produce a boolean on
+the stack which <code>branch</code> will examine to determine whether to execute the
+corresponding block or not. If none of the conditions were satisfied, no
+action is taken.</p>
+<p>Note that for this to work properly, the condition and conseuence blocks
+must themselves behave properly and leave the stack in the right state.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'branch'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> cond_pairs = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(cond_pairs.t === <span class="hljs-string">'block'</span>);
+        <span class="hljs-built_in">console</span>.assert(cond_pairs.v.length % <span class="hljs-number">2</span> === <span class="hljs-number">0</span>);
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; cond_pairs.v.length; i += <span class="hljs-number">2</span>) {
+            <span class="hljs-built_in">console</span>.assert(cond_pairs.v[i].t === <span class="hljs-string">'block'</span>);
+            <span class="hljs-built_in">console</span>.assert(cond_pairs.v[i+<span class="hljs-number">1</span>].t === <span class="hljs-string">'block'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-84">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-84">&#182;</a>
+              </div>
+              <p>Check the condition.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            stack = run(env, cond_pairs.v[i].v, <span class="hljs-number">0</span>, stack);
+            <span class="hljs-keyword">let</span> b = pop(stack);
+            <span class="hljs-built_in">console</span>.assert(b.t === <span class="hljs-string">'bool'</span>);
+            <span class="hljs-keyword">if</span> (b.v) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-85">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-85">&#182;</a>
+              </div>
+              <p>Condition satisfied. Now evaluate the
+“consequence” block corresponding to that condition.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">return</span> run(env, cond_pairs.v[i+<span class="hljs-number">1</span>].v, <span class="hljs-number">0</span>, stack);
+            }
+        }
+        <span class="hljs-keyword">return</span> stack;
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-86">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-86">&#182;</a>
+              </div>
+              <h3 id="test-branch">Test branch</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-87">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-87">&#182;</a>
+              </div>
+              <p>Run this like <code>tests.branch([number(2), number(3)])</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>tests.branch = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+    <span class="hljs-keyword">let</span> program = [
+        symbol(<span class="hljs-string">'y'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'x'</span>), word(<span class="hljs-string">'def'</span>),
+        block([
+            block([word(<span class="hljs-string">'x'</span>), word(<span class="hljs-string">'y'</span>), word(<span class="hljs-string">'&lt;'</span>)]),
+            block([string(<span class="hljs-string">"less than"</span>)]),
+
+            block([word(<span class="hljs-string">'x'</span>), word(<span class="hljs-string">'y'</span>), word(<span class="hljs-string">'&gt;'</span>)]),
+            block([string(<span class="hljs-string">"greater than"</span>)]),
+
+            block([word(<span class="hljs-string">'true'</span>)]),
+            block([string(<span class="hljs-string">"equal"</span>)])
+        ]),
+        word(<span class="hljs-string">'branch'</span>)
+    ];
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, stack);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-88">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-88">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Concept</strong>: We’ve been writing programs simply using Javascript arrays
+and plain objects. Our program is itself an array. With the newly introduced
+“blocks”, our data structure for representing programs just gained some
+self referential characteristics. With the recent <code>branch</code>, programs are now
+starting to look like trees with some amount of nesting of blocks. 
+This data structure that we’re using to represent our “programs” is an
+example of <strong>Abstract Syntax Trees</strong> or <strong>AST</strong> for short.</p>
+<p>We’ve been writing ASTs all along! There is little else to it.</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-89">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-89">&#182;</a>
+              </div>
+              <h3 id="test-fibonacci-series">Test fibonacci series</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-90">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-90">&#182;</a>
+              </div>
+              <p>Are we Fibonacci yet? Not quite .. ‘cos we can’t print anything yet :)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'print'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-built_in">console</span>.log(pop(stack).v);
+        <span class="hljs-keyword">return</span> stack;
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-91">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-91">&#182;</a>
+              </div>
+              <p>Ok now let’s try again.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>tests.fibonacci = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) </span>{
+    <span class="hljs-keyword">let</span> program = [</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-92">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-92">&#182;</a>
+              </div>
+              <p>We define a ‘fib’ word that uses 3 values from the stack
+i n1 n2
+It prints n1, updates these values as (i-1) n2 (n1+n2)
+and calls itself by name again, until i reaches 0.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        block([</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-93">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-93">&#182;</a>
+              </div>
+              <p>Load up our three arguments.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            symbol(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'def'</span>),
+            symbol(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'def'</span>),
+            symbol(<span class="hljs-string">'i'</span>), word(<span class="hljs-string">'def'</span>),
+
+            block([</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-94">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-94">&#182;</a>
+              </div>
+              <p>The recursion breaking condition.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                block([word(<span class="hljs-string">'i'</span>), number(<span class="hljs-number">0</span>), word(<span class="hljs-string">'&lt;='</span>)]),
+                block([]),
+
+                block([bool(<span class="hljs-literal">true</span>)]),
+                block([
+                    word(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'print'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-95">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-95">&#182;</a>
+              </div>
+              <p>Leave three values on the stack just like when we
+started. Then call ourselves again.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                    word(<span class="hljs-string">'i'</span>), number(<span class="hljs-number">1</span>), word(<span class="hljs-string">'-'</span>),
+                    word(<span class="hljs-string">'n2'</span>),
+                    word(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'+'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-96">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-96">&#182;</a>
+              </div>
+              <p>Recursively invoke ourselves again.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                    word(<span class="hljs-string">'fib'</span>)
+                ])
+            ]),
+            word(<span class="hljs-string">'branch'</span>)
+        ]),
+        symbol(<span class="hljs-string">'fib'</span>), word(<span class="hljs-string">'defun'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-97">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-97">&#182;</a>
+              </div>
+              <p>The number n is assumed to be available on the stack.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        number(<span class="hljs-number">0</span>), number(<span class="hljs-number">1</span>), word(<span class="hljs-string">'fib'</span>)
+    ];
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [number(n)]);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-98">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-98">&#182;</a>
+              </div>
+              <h2 id="detour-argument-binding">Detour: Argument binding</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-99">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-99">&#182;</a>
+              </div>
+              <p>It is kind of getting to be a tedious ritual to bind arguments
+passed on the stack into “variables” we can then refer to in
+our programs.</p>
+<pre><code class="lang-js">block([
+     symbol(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'def'</span>),
+     symbol(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'def'</span>),
+     symbol(<span class="hljs-string">'i'</span>), word(<span class="hljs-string">'def'</span>),
+     ...
+])
+</code></pre>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-100">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-100">&#182;</a>
+              </div>
+              <p>Let’s simplify this using an argument binding primitive we’ll call <code>args</code>.
+We’ll make args take a block given on the stack with a special structure -
+the block must consist of a sequence of symbols. i.e. If you executed the
+block you’d get a bunch of symbols on the stack. We scan this block from
+the end to beginning, pop off matching elements from the stack and <code>def</code>
+them into our environment.</p>
+<p>This will now permit us to simplify that ritual above to the following -</p>
+<pre><code class="lang-js">block([
+     block([symbol(<span class="hljs-string">'i'</span>), symbol(<span class="hljs-string">'n1'</span>), symbol(<span class="hljs-string">'n2'</span>)]), word(<span class="hljs-string">'args'</span>),
+     ...
+])
+</code></pre>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'args'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> args = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(args.t === <span class="hljs-string">'block'</span>);
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = args.v.length - <span class="hljs-number">1</span>; i &gt;= <span class="hljs-number">0</span>; --i) {
+            <span class="hljs-built_in">console</span>.assert(args.v[i].t === <span class="hljs-string">'symbol'</span>);
+            define(env, args.v[i].v, pop(stack));
+        }
+        <span class="hljs-keyword">return</span> stack;
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-101">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-101">&#182;</a>
+              </div>
+              <p>Notice that our functions are now getting to be more self describing.
+If we use <code>args</code> in the opening part of all our functions by convention,
+the “code” of each function can be examined to tell how many arguments
+it needs from the stack - i.e. its arity. By then connecting these
+symbols to what the function does with them, we can infer a lot more
+about the function. For example, if <code>n1</code> and <code>n2</code> are the names of
+two arguments, and the function calculates <code>n1 n2 +</code> at some point,
+we know that these two must be numbers without executing the function.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-102">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-102">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Question</strong>: Can you relate this to main stream programming languages?</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-103">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-103">&#182;</a>
+              </div>
+              <h2 id="implementing-if-">Implementing <code>if</code></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-104">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-104">&#182;</a>
+              </div>
+              <p><code>branch</code> is general enough that we don’t need any other conditional
+handling in our language. However, for one or two branches, all that
+nested blocks seems a bit too much. So just for convenience and minimalism,
+we can implement an <code>if</code> operator as well. <code>if</code> will pop two elements off
+the stack - a boolean and a block. It will execute the block like <code>do</code>
+if the boolean happened to be true. This way, you can chain a sequence
+of <code>if</code>s to get similar behaviour to <code>branch</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'if'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> blk = pop(stack), cond = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(blk.t === <span class="hljs-string">'block'</span>);
+        <span class="hljs-built_in">console</span>.assert(cond.t === <span class="hljs-string">'bool'</span>);
+        <span class="hljs-keyword">if</span> (cond.v) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-105">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-105">&#182;</a>
+              </div>
+              <p>Note that we’re again making the choice that the 
+if block will get evaluated in the enclosing scope
+and won’t have its own scope. If you want definitions
+within <code>if</code> to stay within the <code>if</code> block, then you
+can make new environment for the block to execute in.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">return</span> run(env, blk.v, <span class="hljs-number">0</span>, stack);
+        }
+        <span class="hljs-keyword">return</span> stack;
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-106">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-106">&#182;</a>
+              </div>
+              <p>We can now rewrite the fibonacci in terms of <code>if</code> like this -</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+tests.fobonacci_if = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) </span>{
+    <span class="hljs-keyword">let</span> program = [</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-107">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-107">&#182;</a>
+              </div>
+              <p>We define a ‘fib’ word that uses 3 values from the stack
+i n1 n2
+It prints n1, updates these values as (i-1) n2 (n1+n2)
+and calls itself by name again, until i reaches 0.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        block([</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-108">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-108">&#182;</a>
+              </div>
+              <p>Load up our three arguments.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            symbol(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'def'</span>),
+            symbol(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'def'</span>),
+            symbol(<span class="hljs-string">'i'</span>), word(<span class="hljs-string">'def'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-109">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-109">&#182;</a>
+              </div>
+              <p>The loop exit condition.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            word(<span class="hljs-string">'i'</span>), number(<span class="hljs-number">0</span>), word(<span class="hljs-string">'&gt;'</span>),
+            block([
+                word(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'print'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-110">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-110">&#182;</a>
+              </div>
+              <p>Leave three values on the stack just like when we
+started. Then call ourselves again.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                word(<span class="hljs-string">'i'</span>), number(<span class="hljs-number">1</span>), word(<span class="hljs-string">'-'</span>),
+                word(<span class="hljs-string">'n2'</span>),
+                word(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'+'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-111">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-111">&#182;</a>
+              </div>
+              <p>Recursively invoke ourselves again.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                word(<span class="hljs-string">'fib'</span>)
+            ]), word(<span class="hljs-string">'if'</span>)
+        ]),
+        symbol(<span class="hljs-string">'fib'</span>), word(<span class="hljs-string">'defun'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-112">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-112">&#182;</a>
+              </div>
+              <p>The number n is assumed to be available on the stack.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        number(<span class="hljs-number">0</span>), number(<span class="hljs-number">1</span>), word(<span class="hljs-string">'fib'</span>)
+    ];
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [number(n)]);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-113">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-113">&#182;</a>
+              </div>
+              <h2 id="scope-of-variables">Scope of variables</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-114">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-114">&#182;</a>
+              </div>
+              <p>It looks like we’re comfortably using variables, binding them to
+values in our environment and even doing recursion with them.
+In other words, when we execute a block, its input not only consists
+of the stack contents, but also the bindings in the environment.
+This means a block can both access variables from the environment
+as well as clobber it!</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-115">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-115">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Question</strong>: What are the consequenecs of this approach if we
+adopted it for large scale software development? Do you know
+if this approach is used anywhere currently?</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-116">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-116">&#182;</a>
+              </div>
+              <p>Here is a “weird” implementation of <code>fib</code> to prove the point.
+Try to trace what it does.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>tests.fibonacci2 = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) </span>{
+    <span class="hljs-keyword">let</span> program = [
+        block([
+            block([</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-117">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-117">&#182;</a>
+              </div>
+              <p>The recursion breaking condition.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                block([word(<span class="hljs-string">'i'</span>), number(<span class="hljs-number">0</span>), word(<span class="hljs-string">'&lt;='</span>)]),
+                block([]),
+
+                block([bool(<span class="hljs-literal">true</span>)]),
+                block([
+                    word(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'print'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-118">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-118">&#182;</a>
+              </div>
+              <p>Redefine the three variables we use for our iteration.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                    word(<span class="hljs-string">'i'</span>), number(<span class="hljs-number">1</span>), word(<span class="hljs-string">'-'</span>),
+                    symbol(<span class="hljs-string">'i'</span>), word(<span class="hljs-string">'def'</span>),
+                    
+                    word(<span class="hljs-string">'n2'</span>),
+                    word(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'+'</span>),
+                    
+                    symbol(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'def'</span>),
+                    symbol(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'def'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-119">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-119">&#182;</a>
+              </div>
+              <p>Recursively invoke ourselves again.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                    word(<span class="hljs-string">'fib'</span>)
+                ])
+            ]),
+            word(<span class="hljs-string">'branch'</span>)
+        ]),
+        symbol(<span class="hljs-string">'fib'</span>), word(<span class="hljs-string">'defun'</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-120">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-120">&#182;</a>
+              </div>
+              <p>Store number(n) available on the stack into ‘i’.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        symbol(<span class="hljs-string">'i'</span>), word(<span class="hljs-string">'def'</span>),
+
+        number(<span class="hljs-number">0</span>), symbol(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'def'</span>),
+        number(<span class="hljs-number">1</span>), symbol(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'def'</span>),
+        word(<span class="hljs-string">'fib'</span>)
+    ];
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [number(n)]);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-121">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-121">&#182;</a>
+              </div>
+              <p>The above implementation of <code>fib</code> clearly shows that all our so called
+“functions” are using and clobbering what are essentially “global variables”.
+This is not a great idea for programming in the large. It means you’ll need
+to reserve some names specially for use within functions as “temporary”
+variables so that functions don’t assume that they have valid values.
+It also means you can now look at the internal state of a function after
+it has executed by examining the environment. You cannot also transfer the
+source code of a function between two programs, for fear that the other
+program may be using some names that your function relies on and might
+clobber, causing the other program to break.</p>
+<p>In short, we need our functions to <strong>encapsulate</strong> the computation they
+perform and communicate with the outside world only via the stack.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-122">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-122">&#182;</a>
+              </div>
+              <h3 id="design-choices">Design choices</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-123">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-123">&#182;</a>
+              </div>
+              <p>When we want to implement such an encapsulation, we need to take a step
+back and think about the design choices we have at hand and the consequences
+of these designs. Indeed, different programming languages may make different
+choices at this point, ending up with varied behaviours. If we understand the
+choices at hand, then we’ll likely be able to quickly construct mental models
+of execution of programs in a given language and be effective in exploiting
+the design.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-124">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-124">&#182;</a>
+              </div>
+              <ol>
+<li><p>One basic choice at hand here is to lift the notion of “environment”
+from “set of variable bindings” to a “stack of set of variable bindings”.
+This way, when we enter a “scope” in which we wish that local changes don’t
+affect the enclosing scope, we can simply make a <strong>copy</strong> of the current
+environment before entering the scope, push it on to this stack,
+and pop it back once the scope ends.</p>
+<p>An important consequence of this choice is that it will <strong>not</strong> be
+possible for a scope to influence another scope through variables.
+We may want that in our language, we may not. It is not any inevitable
+law, but simply a choice we get to make at design time. With this approach,
+it is clear what should be done when a block “sets a variable to a value”.</p>
+<p>When accessing variables not <code>def</code>d within a scope (these are called 
+“free variables”), this implementation will result in the block
+picking up values of free variables from the environment in which
+it is <em>executed</em>. Such free variables are said to be “dynamically
+scoped”. This implementation limits dynamic scoping to permit
+reading such variables, but invoking <code>def</code> on them won’t cause changes
+in the executing environment of a scope irrespective of where it is
+defined.</p>
+<blockquote>
+<p><strong>Term</strong>: “Free variables” are variables in a block that
+are referred to in the code without being defined in it as local.</p>
+</blockquote>
+</li>
+<li><p>Instead of making a <em>copy</em>, we could turn the variable lookup
+process to walk a chain of environments. When looking up a variable,
+we’d check the head of the chain first. If it isn’t found, we check its
+“parent”, then the parent’s parent and so on until we find a reference
+or declare the variable to not be found. This way, we could just push
+an empty environment at the end of the chain to limit the scope of variables
+used by a block or function.</p>
+<p>This is a bit more efficient than the environment copy option. However,
+it influences the meaning of blocks and functions. With this implementation,
+the notion of “setting a variable” can have two meanings. One is to introduce
+the binding in the innermost scope where the variable may not exist at
+<code>def</code> time. Another is to figure out which scope in the chain has the
+variable defined and make the <code>def</code> operate on that scope’s environment.
+With the first option, we get a behaviour similar to (1), but with the
+second option, blocks and functions get to modify their environments in a 
+more controlled manner than through global variables.</p>
+<p>Another consequence of this chain approach is how it lets us deal with
+blocks that are defined in one scope but are evaluated in another. We
+can inject a block into a different scope by manipulating the chain
+of environments. The story with free variables is different in this case.
+A block that <code>def</code>s a free variable <em>can</em> modify the variable in the scope
+chain in which it is executed.</p>
+</li>
+<li><p>Another implementation choice is to manage the scopes along with the
+data on the same stack. In this case, the “environment” will simply be
+an index into a stack at which we begin the lookup process. The above
+two implementation choices of copying bindings or linking them into
+a scope chain apply in this implementation too.</p>
+<p>As of now, this implementation choice only implies some additional
+book-keeping on our part with no meaning difference with the other
+implementation. However, if we change the execution model (to asynchronous,
+for example), then this will impact the kinds of programs we can write
+and how they will behave.</p>
+</li>
+<li><p>With the three options above, we’ve pretended that we’ll be using
+<code>def</code> to both <em>introduce</em> a new variable as well as to <em>set</em> an
+existing variable. This need not be the case. We’re free to differentiate
+between the two operations, which leads to further bifurcation of
+implementation choices and consequences.</p>
+</li>
+<li><p>When a block is defined, it may wish to refer to bindings in its
+<em>definition</em> scope and recall them in its <em>execution</em> scope.
+Supporting this feature requires blocks to be created with 
+the necessary bindings captured when they’re pushed on to the stack.
+Then at execution time, these bindings need to be injected into
+the environment chain so that the blocks have access to the
+definition scope as well as the execution scope.</p>
+<p>We have a couple of options here too - where we preserve the definition
+environment between invocations and where we simply copy the bindings,
+thereby losing any modifications a block may do to is definition scope.</p>
+<p>These two options determine whether a block can communicate with
+itself between two executions or not. If we preserve the definition 
+environment by reference, then any <code>def</code>s executed will modify it
+and the changes will be visible to subsequent runs. If we copy the
+definition environment into the execution scope, then the modifications
+won’t sustain.</p>
+</li>
+</ol>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-125">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-125">&#182;</a>
+              </div>
+              <p>For the moment, we’ll take and follow through on approach (2),
+with a basic implementation of (5) also thrown in.</p>
+<p>This means free variables referenced in a function will be able to
+read variables available in their definition and execution environments,
+but won’t be able to modify them.</p>
+<p>We’ll need to modify our notion of “environment” which now needs to be
+turned into a “stack of variable bindings” instead of “variable bindings”.
+This means we need to change the definitions of <code>mk_env</code>, <code>lookup</code> and
+<code>define</code> to reflect this. While <code>lookup</code> will now scan the entire stack to
+find a value, <code>define</code> will modify it only in the inner-most environment.
+Each scope will maintain a reference to its “parent scope” in a special
+reserved key called “[[parent]]”. Though we’ll be doing this, we’ll also
+maintain the parent relationship via a stack of environments as well
+for the moment.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+<span class="hljs-keyword">let</span> parent_scope_key = <span class="hljs-string">'[[parent]]'</span>;
+
+mk_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">return</span> [{}]; <span class="hljs-comment">// We return a stack of environments.</span>
+};
+
+lookup = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, word</span>) </span>{
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = env.length - <span class="hljs-number">1</span>; i &gt;= <span class="hljs-number">0</span>; --i) {
+        <span class="hljs-keyword">let</span> scope = env[i];
+        <span class="hljs-keyword">while</span> (scope) {
+            <span class="hljs-keyword">let</span> val = scope[word.v];
+            <span class="hljs-keyword">if</span> (val) { <span class="hljs-keyword">return</span> val; }
+            scope = scope[parent_scope_key];
+        }
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">undefined</span>;
+};
+
+define = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, key, value</span>) </span>{
+    env[env.length - <span class="hljs-number">1</span>][key] = value;
+    <span class="hljs-keyword">return</span> env;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-126">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-126">&#182;</a>
+              </div>
+              <p>We also need new operations for entering and leaving a local environment.
+This local environment needs to have all the info available in its parent
+environment, so we copy the contents of the parent into the local environment
+at creation time. With this, when we leave a local environment, any 
+bindings effected by <code>define</code> will be lost.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> enter = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    <span class="hljs-keyword">let</span> localEnv = {};
+    localEnv[parent_scope_key] = current_bindings(env);
+    env.push(localEnv);
+    <span class="hljs-keyword">return</span> env;
+};
+
+<span class="hljs-keyword">let</span> leave = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    env.pop();
+    <span class="hljs-keyword">return</span> env;
+};
+
+<span class="hljs-keyword">let</span> current_bindings = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    <span class="hljs-keyword">return</span> env[env.length - <span class="hljs-number">1</span>];
+};
+
+<span class="hljs-keyword">let</span> copy_bindings = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">src, dest</span>) </span>{
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> key <span class="hljs-keyword">in</span> src) {
+        dest[key] = src[key];
+    }
+    <span class="hljs-keyword">return</span> dest;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-127">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-127">&#182;</a>
+              </div>
+              <p>This change affects how the <code>do</code> and <code>defun</code> words function as well. We
+don’t want to change how <code>branch</code> behaves just yet.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-128">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-128">&#182;</a>
+              </div>
+              <p>Before we get to any of that though, we must modify <code>run</code> to handle creation
+of blocks. When a block is about to be pushed on to the stack, a copy of its
+definition environment must be made and stored along with the block. When
+<code>do</code> and <code>defun</code> evaluate blocks, they will restore this definition
+environment copy and then execute it.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+run = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack</span>) </span>{
+    <span class="hljs-keyword">for</span> (; pc &lt; program.length; ++pc) {
+        <span class="hljs-keyword">let</span> instr = program[pc];
+        
+        <span class="hljs-keyword">if</span> (instr.t === <span class="hljs-string">'word'</span>) {
+            <span class="hljs-keyword">let</span> deref = lookup(env, instr);
+            <span class="hljs-keyword">if</span> (!deref) {
+                <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Undefined word "'</span> + instr.v + <span class="hljs-string">'" at instruction '</span> + pc);
+            }
+            instr = deref;
+        }
+
+        <span class="hljs-keyword">switch</span> (instr.t) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:
+                stack = apply(instr, stack);
+                <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-129">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-129">&#182;</a>
+              </div>
+              <p>Special case for block definition. We capture the
+definition environment and store it along with the
+block structure on the stack. There is a subtlety
+here - we’re making a new block value instead of
+reusing the block value in the program directly by
+reference. This is necessary because the same block
+may end up being defined multiple times with different
+sets of bindings from its environment.</p>
+<p>One subtlety is that copying the bindings at this point
+as opposed to referencing the current bindings have
+different effects on program behaviour. When copying,
+further alterations to the parent environment will not
+be available to the block’s environment. If we reference
+instead, then we can not only save copy time, but also
+use the environment sharing as a way to communicate
+between blocks in the same environment. Briefly, forward
+references to definitions won’t work within a block.</p>
+<p>We’ll choose the stricter form and do copying for now.
+Later we’ll relax this constraint.</p>
+<p>We’ve implemented a “closure”!</p>
+<blockquote>
+<p><strong>Question</strong>: Comment on the efficiency of doing this
+as opposed to copying everything as might’ve happened
+had we used approach (1).</p>
+</blockquote>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">case</span> <span class="hljs-string">'block'</span>:
+                <span class="hljs-keyword">let</span> bound_block = block(instr.v);
+                bound_block.bindings = instr.bindings || copy_bindings(current_bindings(env), {});
+                push(stack, bound_block);
+                <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-130">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-130">&#182;</a>
+              </div>
+              <p>In all other cases we just store the value on the stack.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">default</span>:
+                push(stack, instr);
+                <span class="hljs-keyword">break</span>;
+        }
+    }
+
+    <span class="hljs-keyword">return</span> stack;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-131">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-131">&#182;</a>
+              </div>
+              <p><code>do</code> and <code>defun</code> need to be redefined to 
+support the block-level bindings we wish to incorporate.
+But just so we don’t repeat ourselves again, we’ll
+pull out the common functionality in <code>do</code> into a function
+we can customize later.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> do_block = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, block</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-132">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-132">&#182;</a>
+              </div>
+              <p>This is the crucial bit. We enter a local environment
+when evaluating the block and leave it once the 
+evaluation is complete. Notice that <code>copy_bindings</code>
+will copy all the bindings including the reference to
+the parent. This means that the block will not have 
+access to bindings visible from the execution environment.
+So if a block makes a reference to a “free” variable 
+named ‘x’, then the meaning of ‘x’ will always be either
+in the context of where the block was created, or local
+to the block.</p>
+<blockquote>
+<p><strong>Question</strong>: What consequence does this choice have
+on program behaviour? Consider program predictability,
+debuggability, etc. You’ll need to check this from both
+perspectives - i.e. what happens when we include the
+execution environment’s bindings as well as what happens
+when we exclude them.</p>
+</blockquote>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+    enter(env);
+    copy_bindings(block.bindings, current_bindings(env));
+    stack = run(env, block.v, <span class="hljs-number">0</span>, stack);
+    leave(env);
+    <span class="hljs-keyword">return</span> stack;
+};
+
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'do'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> block = pop(stack);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-133">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-133">&#182;</a>
+              </div>
+              <p>If we’ve been given a primitive, we call it directly.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (block.t === <span class="hljs-string">'prim'</span>) {
+            <span class="hljs-keyword">return</span> block.v(env, stack);
+        }
+
+        <span class="hljs-built_in">console</span>.assert(block.t === <span class="hljs-string">'block'</span>);
+        <span class="hljs-keyword">return</span> do_block(env, stack, block);
+    }));
+
+    define(env, <span class="hljs-string">'defun'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> sym = pop(stack), block = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(sym.t === <span class="hljs-string">'symbol'</span>);
+        <span class="hljs-keyword">if</span> (block.t === <span class="hljs-string">'prim'</span>) {
+            define(env, sym.v, block);
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-built_in">console</span>.assert(block.t === <span class="hljs-string">'block'</span>);
+            define(env, sym.v, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+                <span class="hljs-keyword">return</span> do_block(env, stack, block);
+            }));
+        }
+        <span class="hljs-keyword">return</span> stack;
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-134">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-134">&#182;</a>
+              </div>
+              <p>With the above re-definitions for local environments, 
+we’ll find that <code>tests.fibonacci2</code> no longer works,
+but <code>tests.fibonacci</code> does work.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+tests.fibonacci2 = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+    <span class="hljs-built_in">console</span>.error(<span class="hljs-string">"tests.fibonacci2 will work only before the support for local scope was added.\n"</span> +
+                  <span class="hljs-string">"tests.fibonacci will continue to work though."</span>);
+    <span class="hljs-keyword">return</span> stack;
+};</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

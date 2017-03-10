@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Object Oriented Programming</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="slang.html">
+                  slang.js
+                </a>
+              
+                
+                <a class="source" href="slang_concurrency.html">
+                  slang_concurrency.js
+                </a>
+              
+                
+                <a class="source" href="slang_objects.html">
+                  slang_objects.js
+                </a>
+              
+                
+                <a class="source" href="slang_parse.html">
+                  slang_parse.js
+                </a>
+              
+                
+                <a class="source" href="slang_vocab.html">
+                  slang_vocab.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h1 id="object-oriented-programming">Object Oriented Programming</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Requires slang.js and slang_vocab.js</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-string">"use srict"</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>We’re going to <em>implement</em> an object oriented system in our language
+using the “vocabulary” mechanism we’ve just invented. To do this,
+we need to conceptualize what an object oriented system is. If we’re
+to go by Alan Kay’s expression of the essence of object orientation
+as “messaging” between encapsulated computational processes, we need
+to be able to express such a “message” in our system.</p>
+<p>For starters, we don’t really need a separate type for messages.
+We can use our good old symbols.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> message = symbol;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>We also need a type for objects which can have a vocabulary to act
+on them and have properties to which we associate values.
+We make a simple generalization here as well - we’ll treat any
+type which has a ‘vocab’ field whose value is a <code>vocab()</code> type
+as though it were an object to which we can send “messages”.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> object = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">properties, vocabulary</span>) </span>{
+    <span class="hljs-built_in">console</span>.assert(vocabulary.t === <span class="hljs-string">'vocab'</span>);
+    <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'object'</span>, <span class="hljs-attr">v</span>: properties, <span class="hljs-attr">vocab</span>: vocabulary};
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>A “message” is identified by a name. Given a message, the only thing we can
+logically do with it is to send it to an object. So we need to implement a
+“send” word which takes a message and a thing to which it can be sent to and
+“sends” it to it. For instructional purposes, we’ll implement message
+sending as equivalent to method invocation just so it is in territory that
+everyone is familiar with.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>To “send a message to an object”, we look up its vocabulary
+for the message symbol, take the defined handler and invoke it.
+If the vocabulary specifies a normal value, we just push it onto
+the stack.</p>
+<p>Usage: <code>thing :message send</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'send'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> msg = pop(stack), thing = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(msg.t === <span class="hljs-string">'symbol'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>We check for the <code>vocab</code> field as an indication
+of “objecthood”. This means we can use <code>send</code> with
+other types which have been given a vocabulary also
+and not just those with type <code>object</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (!thing.vocab || !thing.vocab.v[msg.v]) {
+            <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'No vocabulary relevant to message'</span>);
+            <span class="hljs-keyword">return</span> stack;
+        }
+
+        <span class="hljs-keyword">let</span> method_or_val = thing.vocab.v[msg.v];
+        <span class="hljs-keyword">if</span> (!method_or_val) {
+            <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Vocabulary doesn\'t accept message "'</span> + msg.v + <span class="hljs-string">'"'</span>);
+            <span class="hljs-keyword">return</span> stack;
+        }
+
+        <span class="hljs-keyword">switch</span> (method_or_val.t) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:
+                push(stack, thing);
+                <span class="hljs-keyword">return</span> apply(env, method_or_val, stack);
+            <span class="hljs-keyword">default</span>:
+                <span class="hljs-keyword">return</span> push(stack, method_or_val); <span class="hljs-comment">// Normal value.</span>
+        }
+    }));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>To get a property of an object, we use a symbol to lookup
+its property list. This also works with vocabularies.</p>
+<p>Usage: <code>thing :key get</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'get'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> name = pop(stack), thing = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(name.t === <span class="hljs-string">'symbol'</span>);
+        <span class="hljs-built_in">console</span>.assert(thing.t === <span class="hljs-string">'object'</span> || thing.t === <span class="hljs-string">'vocab'</span>);
+        <span class="hljs-keyword">return</span> push(stack, thing.v[name.v]);
+    }));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>To change a property of an object, we modify its property
+list at the given key. At the end, we leave the object on the
+stack so that multiple put operations can be done.</p>
+<p>Usage: <code>thing val :key put</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'put'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> name = pop(stack), val = pop(stack), thing = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(name.t === <span class="hljs-string">'symbol'</span>);
+        <span class="hljs-built_in">console</span>.assert(thing.t === <span class="hljs-string">'object'</span>);
+        thing.v[name.v] = val;
+        <span class="hljs-keyword">return</span> push(stack, thing);
+    }));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p><code>vocab new</code></p>
+<p>We certainly need some way to create objects!
+<code>new</code> takes the vocabulary on top of the stack and makes
+an object out of it. If the vocabulary includes a function
+named <code>make</code>, then it will invoke it on the object to build
+it up.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'new'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> voc = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(voc.t === <span class="hljs-string">'vocab'</span>);
+
+        <span class="hljs-keyword">let</span> thing = object({}, voc);
+        push(stack, thing);
+
+        <span class="hljs-keyword">let</span> make = voc.v[<span class="hljs-string">'make'</span>];
+        <span class="hljs-keyword">if</span> (make &amp;&amp; make.t === <span class="hljs-string">'prim'</span>) {
+            <span class="hljs-keyword">return</span> apply(env, make, stack);
+        }
+
+        <span class="hljs-keyword">return</span> stack;
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>That’s about it. We’re done implementing an “object oriented” language!  It
+has objects. You can send messages to these objects and invoke code that
+will respond to these messages. Objects have properties that you can access
+and modify - though this is not really a necessity for them.  You can
+construct vocabularies for objects to model their behaviour. You can combine
+these vocabularies to form new vocabularies.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Discussion</strong>: What kind of an object oriented system
+have we just created? Does this correspond to any system
+you know of? Can we change the implementation to support
+other kinds of “object orientation”?</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <h2 id="invoking-super">Invoking super</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>If you noticed, our mechanism doesn’t give us an explicit notion of “inheritance”,
+and so “invoking super” becomes a problem. This is even more of a problem if
+there is “inheritance” from multiple vocabularies involved. This is surprisingly
+easy to get around. </p>
+<p>When we make a new vocabulary by combining existing vocabularies, we can refer
+to them directly, perhaps bound to a symbol. So all we need is a <code>send*</code>
+which will explicitly target a vocabulary on a given object, even irrespective of
+whether that vocabulary is part of the object’s behaviour.</p>
+<p>With <code>send*</code>, the invocation of a “super vocabulary” can be done using -</p>
+<p><code>word(&#39;thing&#39;), word(&#39;voc&#39;), word(&#39;msg&#39;), word(&#39;send*&#39;)</code></p>
+<p>where <code>thing</code>, <code>voc</code> and <code>msg</code> are variables bound to values of appropriate
+types. <code>thing</code> should be an object, <code>voc</code> should be a vocabulary to direct
+when dealing with the object and <code>msg</code> is a message to send to the object as
+interpreted by the vocabulary.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'send*'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> msg = pop(stack), voc = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(msg.t === <span class="hljs-string">'symbol'</span>);
+        <span class="hljs-built_in">console</span>.assert(voc.t === <span class="hljs-string">'vocab'</span>);
+
+        <span class="hljs-keyword">let</span> method_or_val = voc.v[msg.v];
+        <span class="hljs-keyword">if</span> (!method_or_val) {
+            <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Vocabulary doesn\'t accept message "'</span> + msg.v + <span class="hljs-string">'"'</span>);
+            <span class="hljs-keyword">return</span> stack;
+        }
+
+        <span class="hljs-keyword">if</span> (method_or_val.t === <span class="hljs-string">'prim'</span>) {
+            <span class="hljs-keyword">return</span> apply(env, method_or_val, stack);
+        }
+
+        <span class="hljs-keyword">return</span> push(stack, method_or_val);
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>Alternatively, we can provide the ability to cast
+a spell on an object so that it can speak a given
+vocabulary. This would also permit us to make
+explicit super message sends.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p><code>thing vocab cast</code></p>
+<p>Endows the <code>thing</code> with the given vocabulary and leaves
+it on the stack for further operations.</p>
+<p>Options -</p>
+<ol>
+<li><p>We can superimpose the given vocabulary on top of an
+existing vocabulary by adding words.</p>
+</li>
+<li><p>We can replace existing vocabulary entirely.</p>
+</li>
+</ol>
+<p>We choose the latter for simplicity. If you want (1),
+you can always make a new vocabulary that mixes multiple
+vocabularies and then use <code>cast</code>.</p>
+<p><code>cast</code> is intended to sound like “cast spells” rather than
+“type cast”, though you could also think of it as the latter.</p>
+<p>Once a thing has been casted, you can <code>send</code> messages to
+it using the vocabulary which it was casted with. This adds
+some cheap object orientation to the existing types we’ve
+defined. For example, you can do -</p>
+<p><code>2.34 complex cast</code></p>
+<p>where <code>complex</code> is a vocabulary for complex number operations.
+We don’t touch the original value. This way, we can use this
+mechanism to do a “super send” in the case where multiple
+vocabularies are given to an object.</p>
+<p><code>thing super2 cast :message send</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'cast'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> voc = pop(stack), thing = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(voc.t === <span class="hljs-string">'vocab'</span>);
+        <span class="hljs-keyword">let</span> copy = copy_bindings(thing, {});
+        copy.vocab = voc;
+        <span class="hljs-keyword">return</span> push(stack, copy);
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

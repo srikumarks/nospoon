@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>A Parser</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="slang.html">
+                  slang.js
+                </a>
+              
+                
+                <a class="source" href="slang_concurrency.html">
+                  slang_concurrency.js
+                </a>
+              
+                
+                <a class="source" href="slang_objects.html">
+                  slang_objects.js
+                </a>
+              
+                
+                <a class="source" href="slang_parse.html">
+                  slang_parse.js
+                </a>
+              
+                
+                <a class="source" href="slang_vocab.html">
+                  slang_vocab.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <h1 id="a-parser">A Parser</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Requires slang.js</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-meta">"use strict"</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>In the No Spoon series, we want to start with a mental model, and then move
+up through semantics into syntax. The motivation for this approach is that
+too often devs get caught up in the syntactic aspects of a language, and if
+they’re lucky, some semantics which hinder them from reaping the benefits of
+the language. By starting with the mental model, our intention is to ensure
+that we introduce no new concepts as we move through semantics to syntax.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>In that spirit, we’d like to start with our now clear mental model as
+expressed in our programs and then make a syntax that is closely aligned
+with it with the sole purpose of saving some typing. We will introduce no
+new concepts along the way.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> fibonacci_program = [
+    block([
+        symbol(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'def'</span>),
+        symbol(<span class="hljs-string">'i'</span>), word(<span class="hljs-string">'def'</span>),
+
+        word(<span class="hljs-string">'i'</span>), number(<span class="hljs-number">0</span>), word(<span class="hljs-string">'&gt;'</span>),
+        block([
+            word(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'print'</span>),  
+
+            word(<span class="hljs-string">'i'</span>), number(<span class="hljs-number">1</span>), word(<span class="hljs-string">'-'</span>),
+            word(<span class="hljs-string">'n2'</span>),
+            word(<span class="hljs-string">'n1'</span>), word(<span class="hljs-string">'n2'</span>), word(<span class="hljs-string">'+'</span>),
+
+            word(<span class="hljs-string">'fib'</span>)
+        ]),
+        word(<span class="hljs-string">'if'</span>)
+    ]),
+    symbol(<span class="hljs-string">'fib'</span>), word(<span class="hljs-string">'defun'</span>),
+
+    number(<span class="hljs-number">0</span>), number(<span class="hljs-number">1</span>), word(<span class="hljs-string">'fib'</span>)
+];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <h2 id="string-to-entity-mapping">String to entity mapping</h2>
+<p>To start with, our “program” is just a normal Javascript array.
+Each entry of the array uses a value constructor to determine what
+instruction occurs at that location. The following types of
+values need to be supported in our programs.</p>
+<ul>
+<li>words</li>
+<li>numbers</li>
+<li>strings</li>
+<li>symbols</li>
+<li>blocks</li>
+</ul>
+<p>To work out a syntax for all instruction types other than blocks, 
+it would suffice if we’re able to work out the constructor that
+we must use given a string representation of the argument of the
+constructor. i.e. Given “123”, if we can infer it is a number,
+given “abc” that it is a word, given “hello world” that it is a
+string, and given “x1” that it is a symbol.</p>
+<p>Of these, we have an overlap between words, symbols and strings.
+Numbers are straightfoward. For blocks, we can just use arrays
+anyway.</p>
+<p>So we can add something special to identify a symbol given its
+string representation. For example, we could infer that all strings
+of the form “:abcxyz123” will be symbols (not including the “:”),
+that strings are enclosed in double quotes, with everything else
+being a word.</p>
+<p>For strings, we want to keep it simple and say that the double
+quote character won’t be used within the string, but we’ll 
+permit URL-style encoding instead. This makes it easy to 
+parse out a string.</p>
+<h2 id="commitments-made-already">Commitments made already</h2>
+<p>The problem with starting out with syntax starts very early.
+We see already how we’re limiting the shape of symbols, how
+we’re going to represent strings in serialized form and the
+specific numeric format we’ll use for numbers.</p>
+<p>Thankfully, this is where it ends for now. We can make a nice
+parser already. Here is our ideal version of our fibonacci
+program that would save typing.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> fibonacci_program_rep = [
+    [ <span class="hljs-string">':n2'</span>, <span class="hljs-string">'def'</span>,
+      <span class="hljs-string">':n1'</span>, <span class="hljs-string">'def'</span>,
+      <span class="hljs-string">':i'</span>, <span class="hljs-string">'def'</span>,
+
+      <span class="hljs-string">'i'</span>, <span class="hljs-string">'0'</span>, <span class="hljs-string">'&gt;'</span>,
+      [ <span class="hljs-string">'n1'</span>, <span class="hljs-string">'print'</span>,
+        
+        <span class="hljs-string">'i'</span>, <span class="hljs-string">'1'</span>, <span class="hljs-string">'-'</span>,
+        <span class="hljs-string">'n2'</span>,
+        <span class="hljs-string">'n1'</span>, <span class="hljs-string">'n2'</span>, <span class="hljs-string">'+'</span>,
+
+        <span class="hljs-string">'fib'</span>
+      ], <span class="hljs-string">'if'</span>,
+    ],
+    <span class="hljs-string">':fib'</span>, <span class="hljs-string">'defun'</span>,
+
+    <span class="hljs-string">'0'</span>, <span class="hljs-string">'1'</span>, <span class="hljs-string">'fib'</span>
+];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Now let’s write a function to turn each of those array
+entries into a valid slang entity.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> parse_entity = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">item</span>) </span>{
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> item === <span class="hljs-string">'string'</span>) {
+        <span class="hljs-keyword">if</span> (item[<span class="hljs-number">0</span>] === <span class="hljs-string">':'</span>) { <span class="hljs-comment">// Symbol</span>
+            <span class="hljs-keyword">return</span> symbol(item.substring(<span class="hljs-number">1</span>));
+        }
+        <span class="hljs-keyword">if</span> (item[<span class="hljs-number">0</span>] === <span class="hljs-string">'"'</span> &amp;&amp; item[item.length<span class="hljs-number">-1</span>] === <span class="hljs-string">'"'</span>) { <span class="hljs-comment">// String</span>
+            <span class="hljs-keyword">return</span> string(item.substring(<span class="hljs-number">1</span>, item.length<span class="hljs-number">-1</span>));
+        }
+        <span class="hljs-keyword">let</span> n = <span class="hljs-built_in">parseFloat</span>(item);
+        <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">isNaN</span>(n)) { <span class="hljs-comment">// Number</span>
+            <span class="hljs-keyword">return</span> number(n);
+        }
+        <span class="hljs-keyword">return</span> word(item);
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (item <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Array</span>) {
+        <span class="hljs-keyword">return</span> block(item.map(parse_entity));
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Invalid item serialization'</span>);
+    }
+};
+
+fibonacci_program = fibonacci_program_rep.map(parse_entity);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <h2 id="flattening-to-a-single-string">Flattening to a single string</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Now that we’ve represented each entity in serialized form,
+we can just flatten out our array to make a serialized
+representation of our entire program. So if we can parse
+this flattened out form, then we’re done with our parser.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> parse_slang = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">program</span>) </span>{
+    <span class="hljs-keyword">let</span> result = [];
+    <span class="hljs-keyword">let</span> glyph = <span class="hljs-regexp">/^[^\s\"\[\]]+/</span>;
+    <span class="hljs-keyword">do</span> {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Kill prefix spaces.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        program = program.replace(<span class="hljs-regexp">/^\s+/</span>, <span class="hljs-string">''</span>);
+
+        <span class="hljs-keyword">if</span> (program.length === <span class="hljs-number">0</span>) {
+            <span class="hljs-keyword">return</span> result;
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>Check for number.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">let</span> n = <span class="hljs-built_in">parseFloat</span>(program);
+        <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">isNaN</span>(n)) {
+            result.push(number(n));
+            program = program.replace(glyph, <span class="hljs-string">''</span>);
+            <span class="hljs-keyword">continue</span>;
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Check for symbol.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (program[<span class="hljs-number">0</span>] === <span class="hljs-string">':'</span>) {
+            <span class="hljs-keyword">let</span> sym = glyph.exec(program);
+            <span class="hljs-keyword">if</span> (sym) {
+                result.push(symbol(sym[<span class="hljs-number">0</span>].substring(<span class="hljs-number">1</span>)));
+                program = program.substring(sym[<span class="hljs-number">0</span>].length);
+                <span class="hljs-keyword">continue</span>;
+            }
+
+            <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Hm? Check this out - {'</span> + program.substring(<span class="hljs-number">0</span>, <span class="hljs-number">30</span>) + <span class="hljs-string">' ...}'</span>);
+            program = program.replace(glyph, <span class="hljs-string">''</span>);
+            <span class="hljs-keyword">continue</span>;
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Check for string.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (program[<span class="hljs-number">0</span>] === <span class="hljs-string">'"'</span>) {
+            <span class="hljs-keyword">let</span> i = program.indexOf(<span class="hljs-string">'"'</span>, <span class="hljs-number">1</span>);
+            <span class="hljs-keyword">if</span> (i &gt;= <span class="hljs-number">0</span>) {
+                result.push(string(<span class="hljs-built_in">decodeURIComponent</span>(program.substring(<span class="hljs-number">1</span>, i))));
+                program = program.substring(i+<span class="hljs-number">1</span>);
+                <span class="hljs-keyword">continue</span>;
+            }
+
+            <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Bad string - {'</span> + program.substring(<span class="hljs-number">0</span>, <span class="hljs-number">30</span>) + <span class="hljs-string">' ...}'</span>);
+            result.push(string(program.substring(<span class="hljs-number">1</span>)));
+            program = <span class="hljs-string">''</span>;
+            <span class="hljs-keyword">continue</span>;
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Check for block start.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (program[<span class="hljs-number">0</span>] === <span class="hljs-string">'['</span>) {
+            <span class="hljs-keyword">let</span> b = parse_slang(program.substring(<span class="hljs-number">1</span>));
+            result.push(block(b.block));
+            program = b.rest;
+            <span class="hljs-keyword">continue</span>;
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Check for block end.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (program[<span class="hljs-number">0</span>] === <span class="hljs-string">']'</span>) {
+            <span class="hljs-keyword">return</span> { <span class="hljs-attr">block</span>: result, <span class="hljs-attr">rest</span>: program.substring(<span class="hljs-number">1</span>) };
+        }
+
+        <span class="hljs-keyword">let</span> w = glyph.exec(program);
+        result.push(word(w[<span class="hljs-number">0</span>]));
+        program = program.substring(w[<span class="hljs-number">0</span>].length);
+    } <span class="hljs-keyword">while</span> (program.length &gt; <span class="hljs-number">0</span>);
+
+    <span class="hljs-keyword">return</span> result;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>This makes our fibonacci program quite simple indeed.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+fibonacci_program = parse_slang(<span class="hljs-string">`
+    [ [:i :n1 :n2] args
+      i 0 &gt; 
+      [ n1 print
+        i 1 -
+        n2
+        n1 n2 +
+        fib 
+      ] if
+    ] :fib defun
+    0 1 fib
+`</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <h2 id="printing-an-item">Printing an item</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>Given that we can parse a serialized program form, it’ll be great
+to be able to write out a data item in serialized form so we can
+do both.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> show_slang = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">term</span>) </span>{
+    <span class="hljs-keyword">if</span> (term <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Array</span>) {
+        <span class="hljs-keyword">return</span> term.map(show_slang).join(<span class="hljs-string">' '</span>);
+    }
+
+    <span class="hljs-keyword">switch</span> (term.t) {
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'number'</span>: <span class="hljs-keyword">return</span> <span class="hljs-string">''</span> + term.v;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'word'</span>:   <span class="hljs-keyword">return</span> term.v;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'symbol'</span>: <span class="hljs-keyword">return</span> <span class="hljs-string">':'</span> + term.v;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'string'</span>: <span class="hljs-keyword">return</span> <span class="hljs-string">'"'</span> + <span class="hljs-built_in">encodeURIComponent</span>(term.v) + <span class="hljs-string">'"'</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'block'</span>:  <span class="hljs-keyword">return</span> <span class="hljs-string">'['</span> + show_slang(term.v) + <span class="hljs-string">']'</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:   <span class="hljs-keyword">return</span> <span class="hljs-string">'&lt;&lt;prim&gt;&gt;'</span>;
+        <span class="hljs-keyword">default</span>:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">'&lt;&lt;err&gt;&gt;'</span>;
+    }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>So <code>show_slang</code> and <code>parse_slang</code> are expected to be nearly inverses
+of each other.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <h2 id="adding-comments-to-our-parser-">Adding comments to our parser.</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>Normally in programming languages, a “comment” is a piece of text that
+doesn’t add any meaning to the program and can be stripped out without loss
+for the computer .. though usually at a great loss to humans.</p>
+<p>It would be natural to expect our syntax to support such comments too.
+However, instead of adding it at the parser level, we’ll just add a comment
+primitive that will drop the latest item on the stack.  This way, we can
+write -</p>
+<p><code>&quot;Some code below&quot; ;</code></p>
+<p>and the string will in essence be of no use to the program.  Here, we’re
+using the word ‘;’ to mean <code>comment</code>. However, this way costs some runtime
+overhead to process comments.  Since we can easily remedy that before
+passing the program to our interpreter, we won’t bother about that.</p>
+<p>That said, we need to clarify one behaviour of such a comment that might be
+unexpected to those familiar with main stream langauges - that it comments
+out the value effect of the <em>most recent computation</em> and not the <em>most
+recent term</em>. So as long as we use <code>comment</code> such that the most recent
+computation is also the most recent term, programs won’t cause any ambiguity
+there.</p>
+<p>Note that this implementation of commenting is the same as the <code>drop</code>
+primitive … just with better wording.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">";"</span>, lookup(env, symbol(<span class="hljs-string">'drop'</span>)));
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

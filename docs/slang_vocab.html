@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Vocabularies</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="slang.html">
+                  slang.js
+                </a>
+              
+                
+                <a class="source" href="slang_concurrency.html">
+                  slang_concurrency.js
+                </a>
+              
+                
+                <a class="source" href="slang_objects.html">
+                  slang_objects.js
+                </a>
+              
+                
+                <a class="source" href="slang_parse.html">
+                  slang_parse.js
+                </a>
+              
+                
+                <a class="source" href="slang_vocab.html">
+                  slang_vocab.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <h1 id="vocabularies">Vocabularies</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Requires slang.js</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-meta">"use strict"</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>We’ve thus far done the traditional stuff with scopes. In most languages,
+your power stops pretty much there .. unless you’re using something from
+the LisP family. We’ll do something slightly unusual to demonstrate what
+having control over this process can let us do. </p>
+<p>So far, we can define “words” to mean whatever we want them to mean
+and we can do that in a local environment without affecting the surrounding
+environment. This ability lets us reason about blocks in isolation without
+worry about how its execution environment is going to influence the
+behaviour of the block.</p>
+<p>One of the most powerful things a language can provide you is to make
+whatever facilities it provides in what is called a “reified” or “first class”
+manner. If we can have local variables, what if we can introduce a type
+using which we can capture the local variables introduced by a block and
+use it wherever we want later on even without the block?</p>
+<p>We can call this a “vocabulary”. For example, we can use a block to define
+a set of functions that will work with 2D points as xy coordinates pushed on
+to the stack. We can store away these definitions in a vocabulary and call
+on them only when we need them. We introduce a new type called <code>vocab</code> for
+this purpose.</p>
+<pre><code>block([...]), word(<span class="hljs-string">'vocab'</span>)
+</code></pre><p>The <code>use</code> word then takes the vocabulary and overlays it into the current
+scope.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+<span class="hljs-keyword">let</span> vocab = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">bindings</span>) </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'vocab'</span>, <span class="hljs-attr">v</span>: bindings}; };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>We re-define test_env so that the stdlib becomes a common entity instead
+of being copied over and over.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>test_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">return</span> enter(load_stdlib(mk_env()));
+};
+
+tests.vocab = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">let</span> program = [
+        block([
+            block([
+                block([symbol(<span class="hljs-string">'x1'</span>), symbol(<span class="hljs-string">'y1'</span>), symbol(<span class="hljs-string">'x2'</span>), symbol(<span class="hljs-string">'y2'</span>)]), word(<span class="hljs-string">'args'</span>),
+                word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'-'</span>),
+                word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'-'</span>),
+                word(<span class="hljs-string">'length'</span>)
+            ]), symbol(<span class="hljs-string">'distance'</span>), word(<span class="hljs-string">'defun'</span>),
+
+            block([
+                block([symbol(<span class="hljs-string">'dx'</span>), symbol(<span class="hljs-string">'dy'</span>)]), word(<span class="hljs-string">'args'</span>),
+                word(<span class="hljs-string">'dx'</span>), word(<span class="hljs-string">'dy'</span>), word(<span class="hljs-string">'dx'</span>), word(<span class="hljs-string">'dy'</span>), word(<span class="hljs-string">'dot'</span>),
+                word(<span class="hljs-string">'sqrt'</span>)
+            ]), symbol(<span class="hljs-string">'length'</span>), word(<span class="hljs-string">'defun'</span>),
+            
+            block([
+                block([symbol(<span class="hljs-string">'x1'</span>), symbol(<span class="hljs-string">'y1'</span>), symbol(<span class="hljs-string">'x2'</span>), symbol(<span class="hljs-string">'y2'</span>)]), word(<span class="hljs-string">'args'</span>),
+                word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'*'</span>),
+                word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'*'</span>),
+                word(<span class="hljs-string">'+'</span>)
+            ]), symbol(<span class="hljs-string">'dot'</span>), word(<span class="hljs-string">'defun'</span>)
+        ]), word(<span class="hljs-string">'vocab'</span>), symbol(<span class="hljs-string">'point'</span>), word(<span class="hljs-string">'def'</span>),
+
+        block([
+            word(<span class="hljs-string">'point'</span>), word(<span class="hljs-string">'use'</span>),
+            number(<span class="hljs-number">2</span>), number(<span class="hljs-number">3</span>), number(<span class="hljs-number">5</span>), number(<span class="hljs-number">7</span>), word(<span class="hljs-string">'distance'</span>)
+        ]), word(<span class="hljs-string">'do'</span>)
+    ];
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, []);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Now for the definitions of <code>vocab</code> and <code>use</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p><code>vocab</code> needs to run the block on the stack just like
+<code>do</code> does, except that before the local environment of the
+block is thrown away, it is captured into a separate <code>bindings</code>
+hash and stored away as part of the vocabulary.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'vocab'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> defs = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(defs.t === <span class="hljs-string">'block'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Execute the block and capture its definitions before
+we leave it.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        enter(env);
+        stack = run(env, defs.v, <span class="hljs-number">0</span>, stack);
+        <span class="hljs-keyword">let</span> bindings = copy_bindings(current_bindings(env), {});
+        leave(env);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>We don’t want to preserve the scope chain in this case, so
+delete the parent scope entry.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">delete</span> bindings[parent_scope_key];
+
+        <span class="hljs-keyword">return</span> push(stack, vocab(bindings));
+    }));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>The way we’re implementing <code>use</code>, the vocabulary is
+“immutable” - i.e. you cannot change the bindings
+in a vocabulary in a block that “uses” a vocabulary.
+Once the block in which the <code>use</code> operation occurs
+finishes, the introduced bindings will no longer be
+in effect. So the effect of <code>use</code> is said to be 
+“locally scoped”, just like <code>def</code> and <code>defun</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'use'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> vocab = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(vocab.t === <span class="hljs-string">'vocab'</span>);
+
+        copy_bindings(vocab.v, current_bindings(env));
+        <span class="hljs-keyword">return</span> stack;
+    }));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Concept</strong>: Such a “vocabulary” is equivalent to “modules” or “packages” in
+many languages. However, many languages don’t let modules be “first class”
+in that they cannot be passed around. Javascript is a language which permits
+you to pass around modules defined in a certain way. Languages like C++
+(“modules” = “namespaces”) and Java (“modules” = “pakages”) don’t. You could
+consider “classes” to be modules in a twisted sense, but the notion of a
+class has additional machinery that doesn’t befit the notion of a
+vocabulary.</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Question</strong>: How would you implement a “mutable” vocabulary in <em>slang</em>?</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <h2 id="the-structure-of-vocabularies">The structure of vocabularies</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>While it looks like we’ve introduced the “vocabulary” concept to illustrate
+that we can now play with scope in our language, we’ve already done what would
+be considered to be “fantastic” features in some programming languages.</p>
+<ol>
+<li>Our vocabularies are “first class”.</li>
+<li>Our vocabularies can be combined to make new vocabularies.</li>
+<li>Our vocabularies can be parameterized.</li>
+</ol>
+<p>We already talked about (1). What is worth pointing out though is that we can
+pass vocabularies to functions/blocks to customize their behaviour by injecting
+values into the function scope.</p>
+<p>(2) is simply the fact that invoking the <code>use</code> word introduces a vocabulary into
+the current scope. This means we can invoke more than one vocabulary and have them
+all combine in the order of invocation. If this were itself within a block, then
+we can use that block to define a new vocabulary, like this -</p>
+<pre><code>block([word(<span class="hljs-string">'a'</span>), word(<span class="hljs-string">'use'</span>), word(<span class="hljs-string">'b'</span>), word(<span class="hljs-string">'use'</span>)]), word(<span class="hljs-string">'vocab'</span>)
+</code></pre><p>This gives us a kind of “inheritance” like the way object oriented languages
+combine classes to form new ones. </p>
+<p>(3) is a consequence of the way we chose to define our vocabularies - by 
+evaluating blocks. This means we can formulate a vocabulary that uses
+values on the stack to customize what gets defined. Our vocabularies don’t
+even need to have names because they can be passed around by value. Parameterized
+modules are a powerful feature of the language <a href="https://ocaml.org/">OCaml</a>.</p>
+<blockquote>
+<p><strong>Golden rule</strong>: Whenever you come up with an aspect of your
+system which has this characteristic, you know you have 
+something powerful on your hands. The characteristic is that
+you have some operation using which you an combine two or
+more entities of a type to form a new entity of the same type.</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
