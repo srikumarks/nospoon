@@ -2,7 +2,7 @@
 // # Object Oriented Programming
 
 // Requires slang.js and slang_vocab.js
-"use srict";
+"use strict";
 
 // We're going to *implement* an object oriented system in our language
 // using the "vocabulary" mechanism we've just invented. To do this,

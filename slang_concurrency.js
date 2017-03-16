@@ -1,6 +1,4 @@
 
-
-
 // # Concurrency
 
 // Requires slang.js, slang_vocab.js, slang_objects.js.
@@ -155,7 +153,7 @@ stddefs(function (env) {
         // A new process will receive a stack with one element - the
         // process itself. The block is free to pop it off and define it
         // to a variable for multiple access. For example, a block may begin
-        // with `[:parent :self] args ...`. Using this process, you can send/receive 
+        // with `[parent self] args ...`. Using this process, you can send/receive 
         // messages to yourself, or pass a reference to your process to
         // another process you spawn, to enable two-way communication.
         let new_stack = [stack.process, proc];
@@ -743,6 +741,10 @@ let copy_bindings_for_block = function (block, env, dest) {
 // > fewer bindings than necessary?
  
 run = function (env, program, pc, stack, callback) {
+    if (!stack.process) {
+        stack.process = process(env, block(program));
+    }
+
     for (; pc < program.length; ++pc) {
         let instr = program[pc];
  
@@ -845,3 +847,180 @@ stddefs(function (env) {
     }));
 });
 
+// One thing to notice with this new notion of capturing the bindings
+// relevant to a block is that we can now simplify our implementation 
+// of environment with no change to behaviour. We can just maintain
+// a single chain of scopes.
+
+mk_env = function (base) { return { t: 'env', v: { env: {}, base: base } }; };
+
+lookup = function (env, word) {
+    for (let scope = env.v; scope; scope = scope.base) {
+        let val = scope.env[word.v];
+        if (val) { return val; }
+    }
+    return undefined;
+};
+
+define = function (env, key, value) {
+    env.v.env[key] = value;
+    return env;
+};
+
+enter = function (env) {
+    env.v = { env: {}, base: env.v };
+    return env;
+};
+
+leave = function (env) {
+    env.v = env.v.base;
+    return env;
+};
+
+current_bindings = function (env) {
+    return env.v.env;
+};
+
+// ## Data flow variables
+
+// Mutexes, semaphores and critical sections are common ways in which systems
+// programming languages deal with concurrency control. Recently, [promises and futures]
+// have turned up as useful abstractions in a variety of situations.  A
+// promise or a future is an immediate value that stands for the value that a
+// process will *eventually* produce. Whenever a process needs the value of an
+// unbound dataflow variable, it will suspend and wait for it to be bound in
+// some other process. This way, two processes can coordinate their activities
+// by synchronizing on such dataflow variables. 
+//
+// [promises and futures]: https://en.wikipedia.org/wiki/Futures_and_promises
+
+// Let's try to model these in slang by introducing a new type for dataflow
+// variables. With each `dfvar`, we need to store a list of callbacks to
+// call when the dfvar becomes bound so that processes waiting on it can
+// resume. We also keep around the name of the dfvar just for debugging
+// purposes.
+
+let dfvar = function (name) { 
+    return { t: 'dfvar', v: undefined, name: name, bound: false, resume: [] };
+};
+
+let df_is_bound = function (dfv) { return dfv.bound; };
+
+let df_bind = function (dfv, val) {
+    if (!dfv.bound) {
+        dfv.v = val;
+        dfv.bound = true;
+    }
+    while (dfv.resume.length > 0) {
+        let fn = dfv.resume.shift();
+        later(fn, dfv.v);
+    }
+    return dfv.v;
+};
+
+let df_val = function (dfv, callback) {
+    if (dfv.bound) {
+        return later(callback, dfv.v);
+    }
+
+    dfv.resume.push(callback);
+    return dfv;
+};
+
+// When a process tries to access the value of a dataflow variable that is not
+// bound, it must suspend until it gets a value. We do this via the traditional
+// `await` route.
+
+// We of course need a way for a process to bind an unbound dataflow variable
+// with a value. We must insist that we do this only for unbound variables, or
+// we'll end up with an asynchronous mess. We'll simply reuse `def` to include
+// dataflow variables in the mix instead of introduce another word. We'll of
+// course add a way to create new dataflow variables using a `dfvar` primitive.
+// To wait for a dfvar to be bound, we'll repurpose `await`. This is
+// particularly appropriate as the behaviour of await in the case of a process
+// is similar - where it waits for a process to finish (if it is running) and
+// resumes with the value it places on the top of the stack. If the process is
+// already finished, then it resumes immediately. Similarly, if the dfvar is
+// unbound, it waits for the dfvar to be bound by another process before
+// continuing. If it is bound, then it replaces it by its value on the stack
+// and continues.
+//
+// > **Question**: What kind of a concurrency "mess" would we end up with if
+// > we permit bindings for already bound dataflow variables?
+
+stddefs(function (env) {
+    define(env, 'dfvar', prim(function (env, stack) {
+        let sym = pop(stack);
+        console.assert(sym.t === 'symbol');
+        define(env, sym.v, dfvar(sym));
+        return stack;
+    }));
+
+    define(env, 'def', prim(function (env, stack) {
+        let sym = pop(stack), val = pop(stack);
+        switch (sym.t) {
+            case 'symbol':
+                define(env, sym.v, val);
+                break;
+            case 'dfvar':
+                df_bind(sym, val);
+                // TODO: Note that we must fail in this case if the new value
+                // is not the same as an already bound value if that was the case.
+                break;
+            default:
+                console.error('Unsupported binding type ' + sym.t);
+        }
+        return stack;
+    }));
+
+    define(env, 'await', prim(function (env, stack, callback) {
+        let proc = pop(stack);
+
+        if (proc.t === 'dfvar') {
+            console.assert(callback);
+            df_val(proc, function (val) {
+                callback(push(stack, val));
+            });
+            return stack;
+        }
+
+        console.assert(proc.t === 'process');
+        console.assert(callback);
+
+        if (proc.state === 'done') {
+            return later(callback, push(stack, proc.result));
+        }
+
+        proc.notify.push(function (result) {
+            later(callback, push(stack, result));
+        });
+
+        // Return value will be discarded in the async case anyway.
+        return stack;
+    }));    
+});
+
+tests.dfvar = function () {
+    let program = parse_slang(`
+        "We'll use a convention that capital letters indicate dfvars";
+        :X dfvar
+        [ 5000 after 42 X def ] go
+        "Waiting for X" print
+        X await print
+    `);
+
+    return run(test_env(), program, 0, [], function (stack) {
+        console.log("done");
+    });
+};
+
+// > **Question**: What do we have to do to implement dataflow
+// > variables such that we won't need `await` to get the value
+// > of such a variable? How would you design your primitives to
+// > support the creation of strcutures with unfulfilled dfvars
+// > that await their values only when requested?
+
+// > **Question**: Supposing a dfvar never gets bound and a process
+// > is waiting for it. What facilities would we need to help
+// > design the process so that it won't be locked forever when
+// > such a thing happens?

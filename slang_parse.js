@@ -208,7 +208,7 @@ let parse_slang = function (program) {
 // This makes our fibonacci program quite simple indeed.
 
 fibonacci_program = parse_slang(`
-    [ [:i :n1 :n2] args
+    [ [i n1 n2] args
       i 0 > 
       [ n1 print
         i 1 -

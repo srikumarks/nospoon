@@ -828,7 +828,7 @@ tests.fibonacci = function (n) {
 // 
 // ```js
 // block([
-//      block([symbol('i'), symbol('n1'), symbol('n2')]), word('args'),
+//      block([word('i'), word('n1'), word('n2')]), word('args'),
 //      ...
 // ])
 // ```
@@ -838,7 +838,7 @@ stddefs(function (env) {
         let args = pop(stack);
         console.assert(args.t === 'block');
         for (let i = args.v.length - 1; i >= 0; --i) {
-            console.assert(args.v[i].t === 'symbol');
+            console.assert(args.v[i].t === 'word');
             define(env, args.v[i].v, pop(stack));
         }
         return stack;
@@ -1001,92 +1001,101 @@ tests.fibonacci2 = function (n) {
 // of execution of programs in a given language and be effective in exploiting
 // the design.
 
-// 1. One basic choice at hand here is to lift the notion of "environment"
-//    from "set of variable bindings" to a "stack of set of variable bindings".
-//    This way, when we enter a "scope" in which we wish that local changes don't
-//    affect the enclosing scope, we can simply make a **copy** of the current
-//    environment before entering the scope, push it on to this stack,
-//    and pop it back once the scope ends.
+// #### Option: Scoping by copy
+
+// One basic choice at hand here is to lift the notion of "environment" from
+// "set of variable bindings" to a "stack of set of variable bindings".  This
+// way, when we enter a "scope" in which we wish that local changes don't
+// affect the enclosing scope, we can simply make a **copy** of the current
+// environment before entering the scope, push it on to this stack, and pop it
+// back once the scope ends.
+    
+// An important consequence of this choice is that it will **not** be possible
+// for a scope to influence another scope through variables.  We may want that
+// in our language, we may not. It is not any inevitable law, but simply a
+// choice we get to make at design time. With this approach, it is clear what
+// should be done when a block "sets a variable to a value".
 //    
-//    An important consequence of this choice is that it will **not** be
-//    possible for a scope to influence another scope through variables.
-//    We may want that in our language, we may not. It is not any inevitable
-//    law, but simply a choice we get to make at design time. With this approach,
-//    it is clear what should be done when a block "sets a variable to a value".
+// When accessing variables not `def`d within a scope (these are called "free
+// variables"), this implementation will result in the block picking up values
+// of free variables from the environment in which it is *executed*. Such free
+// variables are said to be "dynamically scoped". This implementation limits
+// dynamic scoping to permit reading such variables, but invoking `def` on them
+// won't cause changes in the executing environment of a scope irrespective of
+// where it is defined.
 //    
-//    When accessing variables not `def`d within a scope (these are called 
-//    "free variables"), this implementation will result in the block
-//    picking up values of free variables from the environment in which
-//    it is *executed*. Such free variables are said to be "dynamically
-//    scoped". This implementation limits dynamic scoping to permit
-//    reading such variables, but invoking `def` on them won't cause changes
-//    in the executing environment of a scope irrespective of where it is
-//    defined.
+// > **Term**: "Free variables" are variables in a block that 
+// > are referred to in the code without being defined in it as local.
+   
+// #### Option: Scoping by live reference chain
+
+// Instead of making a *copy*, we could turn the variable lookup process to
+// walk a chain of environments. When looking up a variable, we'd check the
+// head of the chain first. If it isn't found, we check its "parent", then the
+// parent's parent and so on until we find a reference or declare the variable
+// to not be found. This way, we could just push an empty environment at the
+// end of the chain to limit the scope of variables used by a block or
+// function.
 //    
-//    > **Term**: "Free variables" are variables in a block that
-//    > are referred to in the code without being defined in it as local.
+// This is a bit more efficient than the environment copy option. However, it
+// influences the meaning of blocks and functions. With this implementation,
+// the notion of "setting a variable" can have two meanings. One is to
+// introduce the binding in the innermost scope where the variable may not
+// exist at `def` time. Another is to figure out which scope in the chain has
+// the variable defined and make the `def` operate on that scope's environment.
+// With the first option, we get a behaviour similar to (1), but with the
+// second option, blocks and functions get to modify their environments in a
+// more controlled manner than through global variables.
 //    
-// 2. Instead of making a *copy*, we could turn the variable lookup
-//    process to walk a chain of environments. When looking up a variable,
-//    we'd check the head of the chain first. If it isn't found, we check its
-//    "parent", then the parent's parent and so on until we find a reference
-//    or declare the variable to not be found. This way, we could just push
-//    an empty environment at the end of the chain to limit the scope of variables
-//    used by a block or function.
+// Another consequence of this chain approach is how it lets us deal with
+// blocks that are defined in one scope but are evaluated in another. We can
+// inject a block into a different scope by manipulating the chain of
+// environments. The story with free variables is different in this case.  A
+// block that `def`s a free variable *can* modify the variable in the scope
+// chain in which it is executed.
+
+// #### Option: Scope stored on the stack
+
+// Another implementation choice is to manage the scopes along with the data on
+// the same stack. In this case, the "environment" will simply be an index into
+// a stack at which we begin the lookup process. The above two implementation
+// choices of copying bindings or linking them into a scope chain apply in this
+// implementation too.
 //    
-//    This is a bit more efficient than the environment copy option. However,
-//    it influences the meaning of blocks and functions. With this implementation,
-//    the notion of "setting a variable" can have two meanings. One is to introduce
-//    the binding in the innermost scope where the variable may not exist at
-//    `def` time. Another is to figure out which scope in the chain has the
-//    variable defined and make the `def` operate on that scope's environment.
-//    With the first option, we get a behaviour similar to (1), but with the
-//    second option, blocks and functions get to modify their environments in a 
-//    more controlled manner than through global variables.
+// As of now, this implementation choice only implies some additional
+// book-keeping on our part with no meaning difference with the other
+// implementation. However, if we change the execution model (to asynchronous,
+// for example), then this will impact the kinds of programs we can write and
+// how they will behave.
+
+// #### Option: Splitting away `set` from `def`
+
+// With the three options above, we've pretended that we'll be using `def` to
+// both *introduce* a new variable as well as to *set* an existing variable.
+// This need not be the case. We're free to differentiate between the two
+// operations, which leads to further bifurcation of implementation choices and
+// consequences.
+
+// #### Option: Accessing definition scope in execution scope
+
+// When a block is defined, it may wish to refer to bindings in its
+// *definition* scope and recall them in its *execution* scope.  Supporting
+// this feature requires blocks to be created with the necessary bindings
+// captured when they're pushed on to the stack.  Then at execution time, these
+// bindings need to be injected into the environment chain so that the blocks
+// have access to the definition scope as well as the execution scope.
 //    
-//    Another consequence of this chain approach is how it lets us deal with
-//    blocks that are defined in one scope but are evaluated in another. We
-//    can inject a block into a different scope by manipulating the chain
-//    of environments. The story with free variables is different in this case.
-//    A block that `def`s a free variable *can* modify the variable in the scope
-//    chain in which it is executed.
+// We have a couple of options here too - where we preserve the definition
+// environment between invocations and where we simply copy the bindings,
+// thereby losing any modifications a block may do to is definition scope.
 //    
-// 3. Another implementation choice is to manage the scopes along with the
-//    data on the same stack. In this case, the "environment" will simply be
-//    an index into a stack at which we begin the lookup process. The above
-//    two implementation choices of copying bindings or linking them into
-//    a scope chain apply in this implementation too.
-//    
-//    As of now, this implementation choice only implies some additional
-//    book-keeping on our part with no meaning difference with the other
-//    implementation. However, if we change the execution model (to asynchronous,
-//    for example), then this will impact the kinds of programs we can write
-//    and how they will behave.
-//    
-// 4. With the three options above, we've pretended that we'll be using
-//    `def` to both *introduce* a new variable as well as to *set* an
-//    existing variable. This need not be the case. We're free to differentiate
-//    between the two operations, which leads to further bifurcation of
-//    implementation choices and consequences.
-//    
-// 5. When a block is defined, it may wish to refer to bindings in its
-//    *definition* scope and recall them in its *execution* scope.
-//    Supporting this feature requires blocks to be created with 
-//    the necessary bindings captured when they're pushed on to the stack.
-//    Then at execution time, these bindings need to be injected into
-//    the environment chain so that the blocks have access to the
-//    definition scope as well as the execution scope.
-//    
-//    We have a couple of options here too - where we preserve the definition
-//    environment between invocations and where we simply copy the bindings,
-//    thereby losing any modifications a block may do to is definition scope.
-//    
-//    These two options determine whether a block can communicate with
-//    itself between two executions or not. If we preserve the definition 
-//    environment by reference, then any `def`s executed will modify it
-//    and the changes will be visible to subsequent runs. If we copy the
-//    definition environment into the execution scope, then the modifications
-//    won't sustain.
+// These two options determine whether a block can communicate with itself
+// between two executions or not. If we preserve the definition environment by
+// reference, then any `def`s executed will modify it and the changes will be
+// visible to subsequent runs. If we copy the definition environment into the
+// execution scope, then the modifications won't sustain.
+
+// #### Our choice
 
 // For the moment, we'll take and follow through on approach (2),
 // with a basic implementation of (5) also thrown in.
