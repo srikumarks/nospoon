@@ -395,7 +395,7 @@ empty stack.</p>
               <p>A new process will receive a stack with one element - the
 process itself. The block is free to pop it off and define it
 to a variable for multiple access. For example, a block may begin
-with <code>[:parent :self] args ...</code>. Using this process, you can send/receive 
+with <code>[parent self] args ...</code>. Using this process, you can send/receive 
 messages to yourself, or pass a reference to your process to
 another process you spawn, to enable two-way communication.</p>
 
@@ -1439,6 +1439,10 @@ fewer bindings than necessary?</p>
             
             <div class="content"><div class='highlight'><pre> 
 run = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack, callback</span>) </span>{
+    <span class="hljs-keyword">if</span> (!stack.process) {
+        stack.process = process(env, block(program));
+    }
+
     <span class="hljs-keyword">for</span> (; pc &lt; program.length; ++pc) {
         <span class="hljs-keyword">let</span> instr = program[pc];
  
@@ -1615,6 +1619,303 @@ with this implementation that was possible before, for example?</p>
         }, push(stack, proc));
     }));
 });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-63">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-63">&#182;</a>
+              </div>
+              <p>One thing to notice with this new notion of capturing the bindings
+relevant to a block is that we can now simplify our implementation 
+of environment with no change to behaviour. We can just maintain
+a single chain of scopes.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+mk_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">base</span>) </span>{ <span class="hljs-keyword">return</span> { <span class="hljs-attr">t</span>: <span class="hljs-string">'env'</span>, <span class="hljs-attr">v</span>: { <span class="hljs-attr">env</span>: {}, <span class="hljs-attr">base</span>: base } }; };
+
+lookup = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, word</span>) </span>{
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> scope = env.v; scope; scope = scope.base) {
+        <span class="hljs-keyword">let</span> val = scope.env[word.v];
+        <span class="hljs-keyword">if</span> (val) { <span class="hljs-keyword">return</span> val; }
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">undefined</span>;
+};
+
+define = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, key, value</span>) </span>{
+    env.v.env[key] = value;
+    <span class="hljs-keyword">return</span> env;
+};
+
+enter = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    env.v = { <span class="hljs-attr">env</span>: {}, <span class="hljs-attr">base</span>: env.v };
+    <span class="hljs-keyword">return</span> env;
+};
+
+leave = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    env.v = env.v.base;
+    <span class="hljs-keyword">return</span> env;
+};
+
+current_bindings = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    <span class="hljs-keyword">return</span> env.v.env;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-64">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-64">&#182;</a>
+              </div>
+              <h2 id="data-flow-variables">Data flow variables</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-65">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-65">&#182;</a>
+              </div>
+              <p>Mutexes, semaphores and critical sections are common ways in which systems
+programming languages deal with concurrency control. Recently, <a href="https://en.wikipedia.org/wiki/Futures_and_promises">promises and futures</a>
+have turned up as useful abstractions in a variety of situations.  A
+promise or a future is an immediate value that stands for the value that a
+process will <em>eventually</em> produce. Whenever a process needs the value of an
+unbound dataflow variable, it will suspend and wait for it to be bound in
+some other process. This way, two processes can coordinate their activities
+by synchronizing on such dataflow variables. </p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-66">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>Let’s try to model these in slang by introducing a new type for dataflow
+variables. With each <code>dfvar</code>, we need to store a list of callbacks to
+call when the dfvar becomes bound so that processes waiting on it can
+resume. We also keep around the name of the dfvar just for debugging
+purposes.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> dfvar = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">name</span>) </span>{ 
+    <span class="hljs-keyword">return</span> { <span class="hljs-attr">t</span>: <span class="hljs-string">'dfvar'</span>, <span class="hljs-attr">v</span>: <span class="hljs-literal">undefined</span>, <span class="hljs-attr">name</span>: name, <span class="hljs-attr">bound</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">resume</span>: [] };
+};
+
+<span class="hljs-keyword">let</span> df_is_bound = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">dfv</span>) </span>{ <span class="hljs-keyword">return</span> dfv.bound; };
+
+<span class="hljs-keyword">let</span> df_bind = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">dfv, val</span>) </span>{
+    <span class="hljs-keyword">if</span> (!dfv.bound) {
+        dfv.v = val;
+        dfv.bound = <span class="hljs-literal">true</span>;
+    }
+    <span class="hljs-keyword">while</span> (dfv.resume.length &gt; <span class="hljs-number">0</span>) {
+        <span class="hljs-keyword">let</span> fn = dfv.resume.shift();
+        later(fn, dfv.v);
+    }
+    <span class="hljs-keyword">return</span> dfv.v;
+};
+
+<span class="hljs-keyword">let</span> df_val = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">dfv, callback</span>) </span>{
+    <span class="hljs-keyword">if</span> (dfv.bound) {
+        <span class="hljs-keyword">return</span> later(callback, dfv.v);
+    }
+
+    dfv.resume.push(callback);
+    <span class="hljs-keyword">return</span> dfv;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <p>When a process tries to access the value of a dataflow variable that is not
+bound, it must suspend until it gets a value. We do this via the traditional
+<code>await</code> route.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
+              </div>
+              <p>We of course need a way for a process to bind an unbound dataflow variable
+with a value. We must insist that we do this only for unbound variables, or
+we’ll end up with an asynchronous mess. We’ll simply reuse <code>def</code> to include
+dataflow variables in the mix instead of introduce another word. We’ll of
+course add a way to create new dataflow variables using a <code>dfvar</code> primitive.
+To wait for a dfvar to be bound, we’ll repurpose <code>await</code>. This is
+particularly appropriate as the behaviour of await in the case of a process
+is similar - where it waits for a process to finish (if it is running) and
+resumes with the value it places on the top of the stack. If the process is
+already finished, then it resumes immediately. Similarly, if the dfvar is
+unbound, it waits for the dfvar to be bound by another process before
+continuing. If it is bound, then it replaces it by its value on the stack
+and continues.</p>
+<blockquote>
+<p><strong>Question</strong>: What kind of a concurrency “mess” would we end up with if
+we permit bindings for already bound dataflow variables?</p>
+</blockquote>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'dfvar'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> sym = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(sym.t === <span class="hljs-string">'symbol'</span>);
+        define(env, sym.v, dfvar(sym));
+        <span class="hljs-keyword">return</span> stack;
+    }));
+
+    define(env, <span class="hljs-string">'def'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> sym = pop(stack), val = pop(stack);
+        <span class="hljs-keyword">switch</span> (sym.t) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'symbol'</span>:
+                define(env, sym.v, val);
+                <span class="hljs-keyword">break</span>;
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'dfvar'</span>:
+                df_bind(sym, val);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-69">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-69">&#182;</a>
+              </div>
+              <p>TODO: Note that we must fail in this case if the new value
+is not the same as an already bound value if that was the case.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">break</span>;
+            <span class="hljs-keyword">default</span>:
+                <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Unsupported binding type '</span> + sym.t);
+        }
+        <span class="hljs-keyword">return</span> stack;
+    }));
+
+    define(env, <span class="hljs-string">'await'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
+        <span class="hljs-keyword">let</span> proc = pop(stack);
+
+        <span class="hljs-keyword">if</span> (proc.t === <span class="hljs-string">'dfvar'</span>) {
+            <span class="hljs-built_in">console</span>.assert(callback);
+            df_val(proc, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">val</span>) </span>{
+                callback(push(stack, val));
+            });
+            <span class="hljs-keyword">return</span> stack;
+        }
+
+        <span class="hljs-built_in">console</span>.assert(proc.t === <span class="hljs-string">'process'</span>);
+        <span class="hljs-built_in">console</span>.assert(callback);
+
+        <span class="hljs-keyword">if</span> (proc.state === <span class="hljs-string">'done'</span>) {
+            <span class="hljs-keyword">return</span> later(callback, push(stack, proc.result));
+        }
+
+        proc.notify.push(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">result</span>) </span>{
+            later(callback, push(stack, result));
+        });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-70">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-70">&#182;</a>
+              </div>
+              <p>Return value will be discarded in the async case anyway.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">return</span> stack;
+    }));    
+});
+
+tests.dfvar = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">let</span> program = parse_slang(<span class="hljs-string">`
+        "We'll use a convention that capital letters indicate dfvars";
+        :X dfvar
+        [ 5000 after 42 X def ] go
+        "Waiting for X" print
+        X await print
+    `</span>);
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"done"</span>);
+    });
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-71">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-71">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Question</strong>: What do we have to do to implement dataflow
+variables such that we won’t need <code>await</code> to get the value
+of such a variable? How would you design your primitives to
+support the creation of strcutures with unfulfilled dfvars
+that await their values only when requested?</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-72">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-72">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Question</strong>: Supposing a dfvar never gets bound and a process
+is waiting for it. What facilities would we need to help
+design the process so that it won’t be locked forever when
+such a thing happens?</p>
+</blockquote>
+
+            </div>
             
         </li>
         

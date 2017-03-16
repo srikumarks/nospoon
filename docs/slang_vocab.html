@@ -60,6 +60,7 @@
                 <a class="pilcrow" href="#section-1">&#182;</a>
               </div>
               <h1 id="vocabularies">Vocabularies</h1>
+<p><strong>Date</strong>: 15 March 2017</p>
 
             </div>
             
@@ -100,20 +101,22 @@ behaviour of the block.</p>
 whatever facilities it provides in what is called a “reified” or “first class”
 manner. If we can have local variables, what if we can introduce a type
 using which we can capture the local variables introduced by a block and
-use it wherever we want later on even without the block?</p>
-<p>We can call this a “vocabulary”. For example, we can use a block to define
-a set of functions that will work with 2D points as xy coordinates pushed on
-to the stack. We can store away these definitions in a vocabulary and call
-on them only when we need them. We introduce a new type called <code>vocab</code> for
-this purpose.</p>
+use it wherever we want later on even without the block? In other words,
+what if we could define and use environments <em>within</em> our little language?</p>
+<p>We can call this a “vocabulary”, since we’re interested in meanings assigned
+to a set of words. For example, we can use a block to define a set of
+functions that will work with 2D points as xy coordinates pushed on to the
+stack. We can store away these definitions in a vocabulary and call on them
+only when we need them. We introduce a new type called <code>vocab</code> for this
+purpose.</p>
 <pre><code>block([...]), word(<span class="hljs-string">'vocab'</span>)
-</code></pre><p>The <code>use</code> word then takes the vocabulary and overlays it into the current
-scope.</p>
+</code></pre><p>When the <code>vocab</code> word is interpreted, we’ll get an object on the stack
+that captures all the bindings that were created within the scope of
+the block, in addition to evaluating the block just like <code>do</code> would.</p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>
-
 <span class="hljs-keyword">let</span> vocab = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">bindings</span>) </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'vocab'</span>, <span class="hljs-attr">v</span>: bindings}; };</pre></div></div>
             
         </li>
@@ -132,26 +135,72 @@ of being copied over and over.</p>
             
             <div class="content"><div class='highlight'><pre>test_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
     <span class="hljs-keyword">return</span> enter(load_stdlib(mk_env()));
-};
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>When we’re introducing such a “reification” in our system, it is also useful
+to think about what is called the “dual” operation. In our case, <code>vocab</code>
+captures a set of bindings made within a block and pulls it into an object
+accessible to our programs. The “dual” or “inverse” of this operation would
+be to take such an object and re-introduce the bindings that it captured
+into an environment. After such a step, the vocabulary’s bindings would be
+available like normal within the current block.</p>
+<p>We could call this inverse operation <code>use</code> because it offer a way to “use”
+the words that a vocabulary defines.</p>
+<blockquote>
+<p><strong>Question</strong>: Can you think of other such “reification-dual” &gt; pairs in
+languages that you know?</p>
+</blockquote>
+<p>Whenever we have this kind of matched pair - an operation and its inverse
+where the operation is a communication between two different layers of a
+system, we open ourselves to powerful composition possibilities. In our
+case, for example, we can capture two or more vocabularies, <code>use</code> them
+within a block in order to make a composite vocabulary consisting of all the
+words in those vocabularies. This gives us an “algebra of vocabularies”.
+We’ll see later how we can put this algebra to good use.</p>
+<p>What are other such pairs? In Java, for example, the reflection API lifts
+what is normally accessible only to the JVM - the notion of classes,
+methods, properties, etc. - into the Java language, permitting programmers
+to invoke methods and introspect objects without prior knowledge about their
+classes or properties. One “inverse” of this lifting is a way to take some
+data produced by a Java program and reintroduce it to the JVM as a class.
+This is nothing but the “class loader” mechanism. Many frameworks in Java
+exploit class loaders to make programming certain kinds of systems simple.</p>
+<blockquote>
+<p><strong>Question</strong>: If you consider the concept of an “iterator” or “enumerator”
+in languages like C++, Java and C#, what would be the “dual concept”
+of an iterator?</p>
+</blockquote>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
 tests.vocab = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
     <span class="hljs-keyword">let</span> program = [
         block([
             block([
-                block([symbol(<span class="hljs-string">'x1'</span>), symbol(<span class="hljs-string">'y1'</span>), symbol(<span class="hljs-string">'x2'</span>), symbol(<span class="hljs-string">'y2'</span>)]), word(<span class="hljs-string">'args'</span>),
+                block([word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'y2'</span>)]), word(<span class="hljs-string">'args'</span>),
                 word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'-'</span>),
                 word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'-'</span>),
                 word(<span class="hljs-string">'length'</span>)
             ]), symbol(<span class="hljs-string">'distance'</span>), word(<span class="hljs-string">'defun'</span>),
 
             block([
-                block([symbol(<span class="hljs-string">'dx'</span>), symbol(<span class="hljs-string">'dy'</span>)]), word(<span class="hljs-string">'args'</span>),
+                block([word(<span class="hljs-string">'dx'</span>), word(<span class="hljs-string">'dy'</span>)]), word(<span class="hljs-string">'args'</span>),
                 word(<span class="hljs-string">'dx'</span>), word(<span class="hljs-string">'dy'</span>), word(<span class="hljs-string">'dx'</span>), word(<span class="hljs-string">'dy'</span>), word(<span class="hljs-string">'dot'</span>),
                 word(<span class="hljs-string">'sqrt'</span>)
             ]), symbol(<span class="hljs-string">'length'</span>), word(<span class="hljs-string">'defun'</span>),
             
             block([
-                block([symbol(<span class="hljs-string">'x1'</span>), symbol(<span class="hljs-string">'y1'</span>), symbol(<span class="hljs-string">'x2'</span>), symbol(<span class="hljs-string">'y2'</span>)]), word(<span class="hljs-string">'args'</span>),
+                block([word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'y2'</span>)]), word(<span class="hljs-string">'args'</span>),
                 word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'*'</span>),
                 word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'*'</span>),
                 word(<span class="hljs-string">'+'</span>)
@@ -170,11 +219,11 @@ tests.vocab = <span class="hljs-function"><span class="hljs-keyword">function</s
         </li>
         
         
-        <li id="section-5">
+        <li id="section-6">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+                <a class="pilcrow" href="#section-6">&#182;</a>
               </div>
               <p>Now for the definitions of <code>vocab</code> and <code>use</code>.</p>
 
@@ -185,11 +234,11 @@ tests.vocab = <span class="hljs-function"><span class="hljs-keyword">function</s
         </li>
         
         
-        <li id="section-6">
+        <li id="section-7">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+                <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
               <p><code>vocab</code> needs to run the block on the stack just like
 <code>do</code> does, except that before the local environment of the
@@ -205,11 +254,11 @@ hash and stored away as part of the vocabulary.</p>
         </li>
         
         
-        <li id="section-7">
+        <li id="section-8">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
+                <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
               <p>Execute the block and capture its definitions before
 we leave it.</p>
@@ -224,11 +273,11 @@ we leave it.</p>
         </li>
         
         
-        <li id="section-8">
+        <li id="section-9">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+                <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
               <p>We don’t want to preserve the scope chain in this case, so
 delete the parent scope entry.</p>
@@ -243,11 +292,11 @@ delete the parent scope entry.</p>
         </li>
         
         
-        <li id="section-9">
+        <li id="section-10">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
+                <a class="pilcrow" href="#section-10">&#182;</a>
               </div>
               <p>The way we’re implementing <code>use</code>, the vocabulary is
 “immutable” - i.e. you cannot change the bindings
@@ -271,11 +320,11 @@ in effect. So the effect of <code>use</code> is said to be
         </li>
         
         
-        <li id="section-10">
+        <li id="section-11">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
+                <a class="pilcrow" href="#section-11">&#182;</a>
               </div>
               <blockquote>
 <p><strong>Concept</strong>: Such a “vocabulary” is equivalent to “modules” or “packages” in
@@ -293,28 +342,15 @@ vocabulary.</p>
         </li>
         
         
-        <li id="section-11">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
-              </div>
-              <blockquote>
-<p><strong>Question</strong>: How would you implement a “mutable” vocabulary in <em>slang</em>?</p>
-</blockquote>
-
-            </div>
-            
-        </li>
-        
-        
         <li id="section-12">
             <div class="annotation">
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
-              <h2 id="the-structure-of-vocabularies">The structure of vocabularies</h2>
+              <blockquote>
+<p><strong>Question</strong>: How would you implement a “mutable” vocabulary in <em>slang</em>?</p>
+</blockquote>
 
             </div>
             
@@ -326,6 +362,19 @@ vocabulary.</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <h2 id="the-structure-of-vocabularies">The structure of vocabularies</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
               <p>While it looks like we’ve introduced the “vocabulary” concept to illustrate
 that we can now play with scope in our language, we’ve already done what would

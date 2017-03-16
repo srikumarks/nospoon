@@ -3,7 +3,7 @@
 
 Requires slang.js and slang_vocab.js
 ```js
-"use srict";
+"use strict";
 
 ```
 We're going to *implement* an object oriented system in our language
