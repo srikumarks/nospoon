@@ -20,6 +20,7 @@ slang_all.js: $(litsource) $(libsource)
 
 slang.js.pdf: $(md_files)
 	pandoc --toc -N \
+		   --highlight-style=kate \
 		   -M author="Srikumar K. S." \
 		   -M title="The No Spoon Series : Building Slang" \
 		   -M date=$(timestamp) \
