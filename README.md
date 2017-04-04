@@ -1,5 +1,3 @@
-> **Note**: This is a work-in-progress series.
-
 As introduced in the first talk, this series will take folks through
 the process of creating programming languages in order to better
 design flexible layered systems.
@@ -64,16 +62,15 @@ articulate the advantages of a language-centric design strategy.
 Check out the file `slang.js` in the `slang` folder. This is our
 starting point for making a language from a very basic idea of
 what a program is and actually buliding a working interpreter
-for it. If you want to browse the code in a readable manner, you
-can view [slang.js.md](slang.js.md).
+for it.
+
+1. If you want to browse the code in a readable manner, you can view
+   [slang.js.md](slang.js.md).
+
+2. If you like to have a single PDF to read, see [slang.js.pdf](slang.js.pdf).
+
+3. Docco docs for slang are also available in the `docs/` folder.
 
 [Emscripten]: https://github.com/kripken/emscripten
-
-
-
-
-
-
-
 
 

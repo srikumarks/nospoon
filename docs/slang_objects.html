@@ -99,6 +99,19 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
+              <h2 id="the-essence-of-objects">The essence of objects</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
               <p>We’re going to <em>implement</em> an object oriented system in our language
 using the “vocabulary” mechanism we’ve just invented. To do this,
 we need to conceptualize what an object oriented system is. If we’re
@@ -116,11 +129,11 @@ We can use our good old symbols.</p>
         </li>
         
         
-        <li id="section-5">
+        <li id="section-6">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+                <a class="pilcrow" href="#section-6">&#182;</a>
               </div>
               <p>We also need a type for objects which can have a vocabulary to act
 on them and have properties to which we associate values.
@@ -139,11 +152,11 @@ as though it were an object to which we can send “messages”.</p>
         </li>
         
         
-        <li id="section-6">
+        <li id="section-7">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+                <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
               <p>A “message” is identified by a name. Given a message, the only thing we can
 logically do with it is to send it to an object. So we need to implement a
@@ -160,11 +173,11 @@ stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (
         </li>
         
         
-        <li id="section-7">
+        <li id="section-8">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
+                <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
               <p>To “send a message to an object”, we look up its vocabulary
 for the message symbol, take the defined handler and invoke it.
@@ -181,11 +194,11 @@ the stack.</p>
         </li>
         
         
-        <li id="section-8">
+        <li id="section-9">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+                <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
               <p>We check for the <code>vocab</code> field as an indication
 of “objecthood”. This means we can use <code>send</code> with
@@ -217,11 +230,11 @@ and not just those with type <code>object</code>.</p>
         </li>
         
         
-        <li id="section-9">
+        <li id="section-10">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
+                <a class="pilcrow" href="#section-10">&#182;</a>
               </div>
               <p>To get a property of an object, we use a symbol to lookup
 its property list. This also works with vocabularies.</p>
@@ -239,11 +252,11 @@ its property list. This also works with vocabularies.</p>
         </li>
         
         
-        <li id="section-10">
+        <li id="section-11">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
+                <a class="pilcrow" href="#section-11">&#182;</a>
               </div>
               <p>To change a property of an object, we modify its property
 list at the given key. At the end, we leave the object on the
@@ -263,11 +276,11 @@ stack so that multiple put operations can be done.</p>
         </li>
         
         
-        <li id="section-11">
+        <li id="section-12">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
+                <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
               <p><code>vocab new</code></p>
 <p>We certainly need some way to create objects!
@@ -297,11 +310,11 @@ it up.</p>
         </li>
         
         
-        <li id="section-12">
+        <li id="section-13">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
+                <a class="pilcrow" href="#section-13">&#182;</a>
               </div>
               <p>That’s about it. We’re done implementing an “object oriented” language!  It
 has objects. You can send messages to these objects and invoke code that
@@ -315,11 +328,11 @@ these vocabularies to form new vocabularies.</p>
         </li>
         
         
-        <li id="section-13">
+        <li id="section-14">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
+                <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
               <blockquote>
 <p><strong>Discussion</strong>: What kind of an object oriented system
@@ -333,11 +346,11 @@ other kinds of “object orientation”?</p>
         </li>
         
         
-        <li id="section-14">
+        <li id="section-15">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
+                <a class="pilcrow" href="#section-15">&#182;</a>
               </div>
               <h2 id="invoking-super">Invoking super</h2>
 
@@ -346,11 +359,11 @@ other kinds of “object orientation”?</p>
         </li>
         
         
-        <li id="section-15">
+        <li id="section-16">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
+                <a class="pilcrow" href="#section-16">&#182;</a>
               </div>
               <p>If you noticed, our mechanism doesn’t give us an explicit notion of “inheritance”,
 and so “invoking super” becomes a problem. This is even more of a problem if
@@ -366,6 +379,15 @@ whether that vocabulary is part of the object’s behaviour.</p>
 types. <code>thing</code> should be an object, <code>voc</code> should be a vocabulary to direct
 when dealing with the object and <code>msg</code> is a message to send to the object as
 interpreted by the vocabulary.</p>
+<blockquote>
+<p><strong>Note</strong>: The need for such a “send to super” surfaces in an object system
+purely because the concept of “message sending” has been interpreted as
+“method invocation”. Therefore the question of “which method?” arises, hence
+the usual inheritance, etc. If message sending is interpreted as a message
+that is sent between two asynchronous <em>processes</em>, then this anomaly vanishes.
+In fact, in that case, the notion of inheritance, containment, etc. just disappear
+and merge into the concept of “object networks”.</p>
+</blockquote>
 
             </div>
             
@@ -393,11 +415,11 @@ stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (
         </li>
         
         
-        <li id="section-16">
+        <li id="section-17">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-16">&#182;</a>
+                <a class="pilcrow" href="#section-17">&#182;</a>
               </div>
               <p>Alternatively, we can provide the ability to cast
 a spell on an object so that it can speak a given
@@ -409,11 +431,11 @@ explicit super message sends.</p>
         </li>
         
         
-        <li id="section-17">
+        <li id="section-18">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-17">&#182;</a>
+                <a class="pilcrow" href="#section-18">&#182;</a>
               </div>
               <p><code>thing vocab cast</code></p>
 <p>Endows the <code>thing</code> with the given vocabulary and leaves
@@ -453,6 +475,91 @@ vocabularies are given to an object.</p>
         <span class="hljs-keyword">return</span> push(stack, copy);
     }));
 });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <h2 id="making-a-complete-object-system">Making a complete object system</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>We have an asymmetry within our system. We have our new-fangled
+“objects” on the one hand, and on the other we have our numbers,
+strings, symbols and such “primitive objects”. This is quite an
+unnecessary distinction as we can merge the two systems into a 
+single system with the following rule -</p>
+<blockquote>
+<p>Every value is associated with a vocabulary.</p>
+</blockquote>
+<p>In object-oriented languages like Smalltalk and Ruby, this principle
+is usually articulated as -</p>
+<blockquote>
+<p>Everything is an object.</p>
+</blockquote>
+<p>So how do we convert our system into such a unified system?</p>
+<p>As a first step, we can just modify all our “primitive object”
+constructors to produce entities which come along with a vocabulary.
+That would permit us to use <code>send</code> with all our primitive values
+as well. Our current implementation of <code>send</code> already accommodates
+this. </p>
+<p>This seems simple, until we consider what we need to do with out “vocabulary
+objects”. Since our vocabularies are also values, each vocabulary also need
+to have an associated vocabulary that tells the programmer how to talk to
+vocabularies!</p>
+<ul>
+<li>A value has a vocabulary that says how to talk to the value.</li>
+<li>A vocabulary is a value. So a vocabulary has a vocabulary that says
+how to talk to vocabularies.</li>
+</ul>
+<pre><code class="lang-js">n = {<span class="hljs-attr">t</span>: <span class="hljs-string">"number"</span>, <span class="hljs-attr">v</span>:<span class="hljs-number">5</span>, <span class="hljs-attr">vocab</span>: howToTalkToNumber}
+howToTalkToNumber = {<span class="hljs-attr">t</span>: <span class="hljs-string">"vocab"</span>, <span class="hljs-attr">v</span>: {..number methods..}, <span class="hljs-attr">vocab</span>: howToTalkToVocabulary}
+howToTalkToVocabulary = {<span class="hljs-attr">t</span>: <span class="hljs-string">"vocab"</span>, <span class="hljs-attr">v</span>: {..vocab methods..}, <span class="hljs-attr">vocab</span>: ??}
+</code></pre>
+<p>What value should be in the <code>??</code> place? The simplest solution to that is -</p>
+<pre><code class="lang-js">howToTalkToVocabulary = {<span class="hljs-attr">t</span>: <span class="hljs-string">"vocab"</span>, <span class="hljs-attr">v</span>: {..vocab methods..}, <span class="hljs-attr">vocab</span>: howToTalkToVocabulary}
+</code></pre>
+<p>The snake must eat its own tail!</p>
+<p>In a language like Smalltalk, the sequence is quite similar, and goes like -</p>
+<ul>
+<li>object is instance(class).</li>
+<li>class is instance(metaclass) is classOf(object).</li>
+<li>metaclass is instance(Metaclass) is metaclassOf(object).</li>
+<li>Metaclass is instance(Class)</li>
+<li>metaclassOf(Metaclass) is instance(Metaclass).</li>
+</ul>
+<p>Ruby is less thorough in this matter, though it also adopts the “everything is an object”
+mindset. The notion of “metaclass” in Ruby is, for practical purposes, non-existent.
+Even so, Ruby still manages to expose considerable power to the programmer by working
+close enough to this territory. </p>
+<blockquote>
+<p><strong>Book</strong>: <a href="https://en.wikipedia.org/wiki/The_Art_of_the_Metaobject_Protocol">The Art of the Metaobject Protocol</a> details the value of having such a
+meta-object system in an “object oriented language”. Though it discusses this in
+the context of the Common Lisp Object System (CLOS), which is one of the most
+thorough object-oriented systems designed to date, the concepts elucidated in it
+are generic enough to be applied to other languages and systems. Be warned that
+the book is not for the faint of heart, but if you survive it, you’ll come out
+with a different brain :)</p>
+</blockquote>
+<p>With such a unification via a metaobject mechanism, our system is further simplified
+by eliminating the <code>new</code> primitive. <code>new</code> can now be a message that we can <code>send</code> to
+a vocabulary object to make a new object that has that vocabulary.</p>
+
+            </div>
             
         </li>
         
