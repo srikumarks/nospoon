@@ -56,8 +56,8 @@ test_env = function () {
 // We could call this inverse operation `use` because it offer a way to "use"
 // the words that a vocabulary defines.
 //
-// > **Question**: Can you think of other such "reification-dual" > pairs in
-// languages that you know?
+// > **Question**: Can you think of other such "reification-dual" pairs in
+// > languages that you know?
 //
 // Whenever we have this kind of matched pair - an operation and its inverse
 // where the operation is a communication between two different layers of a

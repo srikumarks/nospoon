@@ -4,6 +4,8 @@
 // Requires slang.js and slang_vocab.js
 "use strict";
 
+// ## The essence of objects
+
 // We're going to *implement* an object oriented system in our language
 // using the "vocabulary" mechanism we've just invented. To do this,
 // we need to conceptualize what an object oriented system is. If we're
@@ -148,6 +150,14 @@ stddefs(function (env) {
 // types. `thing` should be an object, `voc` should be a vocabulary to direct
 // when dealing with the object and `msg` is a message to send to the object as
 // interpreted by the vocabulary.
+//
+// > **Note**: The need for such a "send to super" surfaces in an object system
+// > purely because the concept of "message sending" has been interpreted as
+// > "method invocation". Therefore the question of "which method?" arises, hence
+// > the usual inheritance, etc. If message sending is interpreted as a message
+// > that is sent between two asynchronous *processes*, then this anomaly vanishes.
+// > In fact, in that case, the notion of inheritance, containment, etc. just disappear
+// > and merge into the concept of "object networks".
 
 stddefs(function (env) {
     define(env, 'send*', prim(function (env, stack) {
@@ -216,4 +226,76 @@ stddefs(function (env) {
     }));
 });
 
+// ## Making a complete object system
+
+// We have an asymmetry within our system. We have our new-fangled
+// "objects" on the one hand, and on the other we have our numbers,
+// strings, symbols and such "primitive objects". This is quite an
+// unnecessary distinction as we can merge the two systems into a 
+// single system with the following rule -
+//
+// > Every value is associated with a vocabulary.
+//
+// In object-oriented languages like Smalltalk and Ruby, this principle
+// is usually articulated as -
+//
+// > Everything is an object.
+//
+// So how do we convert our system into such a unified system?
+//
+// As a first step, we can just modify all our "primitive object"
+// constructors to produce entities which come along with a vocabulary.
+// That would permit us to use `send` with all our primitive values
+// as well. Our current implementation of `send` already accommodates
+// this. 
+//
+// This seems simple, until we consider what we need to do with out "vocabulary
+// objects". Since our vocabularies are also values, each vocabulary also need
+// to have an associated vocabulary that tells the programmer how to talk to
+// vocabularies!
+//
+// - A value has a vocabulary that says how to talk to the value.
+// - A vocabulary is a value. So a vocabulary has a vocabulary that says
+//   how to talk to vocabularies.
+//
+// ```js
+// n = {t: "number", v:5, vocab: howToTalkToNumber}
+// howToTalkToNumber = {t: "vocab", v: {..number methods..}, vocab: howToTalkToVocabulary}
+// howToTalkToVocabulary = {t: "vocab", v: {..vocab methods..}, vocab: ??}
+// ```
+//
+// What value should be in the `??` place? The simplest solution to that is -
+//
+// ```js
+// howToTalkToVocabulary = {t: "vocab", v: {..vocab methods..}, vocab: howToTalkToVocabulary}
+// ```
+//
+// The snake must eat its own tail!
+//
+// In a language like Smalltalk, the sequence is quite similar, and goes like -
+//
+// - object is instance(class).
+// - class is instance(metaclass) is classOf(object).
+// - metaclass is instance(Metaclass) is metaclassOf(object).
+// - Metaclass is instance(Class)
+// - metaclassOf(Metaclass) is instance(Metaclass).
+// 
+// Ruby is less thorough in this matter, though it also adopts the "everything is an object"
+// mindset. The notion of "metaclass" in Ruby is, for practical purposes, non-existent.
+// Even so, Ruby still manages to expose considerable power to the programmer by working
+// close enough to this territory. 
+//
+// > **Book**: [The Art of the Metaobject Protocol] details the value of having such a
+// > meta-object system in an "object oriented language". Though it discusses this in
+// > the context of the Common Lisp Object System (CLOS), which is one of the most
+// > thorough object-oriented systems designed to date, the concepts elucidated in it
+// > are generic enough to be applied to other languages and systems. Be warned that
+// > the book is not for the faint of heart, but if you survive it, you'll come out
+// > with a different brain :)
+//
+// [The Art of the Metaobject Protocol]: https://en.wikipedia.org/wiki/The_Art_of_the_Metaobject_Protocol
+//
+// With such a unification via a metaobject mechanism, our system is further simplified
+// by eliminating the `new` primitive. `new` can now be a message that we can `send` to
+// a vocabulary object to make a new object that has that vocabulary.
 
