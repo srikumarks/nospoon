@@ -4,7 +4,21 @@ design flexible layered systems.
 
 Prerequisite: [Javascript - the really good parts][jskernel]
 
-[jskernel]: https://gitlab.pramati.com/nospoon/talks/wikis/javascript-the-really-good-parts
+[jskernel]: https://github.com/Imaginea/nospoon/wiki/Javascript---The-Really-Good-Parts
+
+## Links to content
+
+Check out the file `slang.js`. This is our
+starting point for making a language from a very basic idea of
+what a program is and actually buliding a working interpreter
+for it.
+
+1. If you want to browse the code in a readable manner, you can view
+   [slang.js.md](slang.js.md).
+
+2. If you like to have a single PDF to read, see [slang.js.pdf](slang.js.pdf).
+
+3. Docco docs for slang are also available in the `docs/` folder.
 
 ## FAQ on using Javascript
 
@@ -57,19 +71,7 @@ teach you enough principles so that you can create languages appropriate
 to various application domains as and when needed and be able to 
 articulate the advantages of a language-centric design strategy.
 
-## Ok now what?
 
-Check out the file `slang.js` in the `slang` folder. This is our
-starting point for making a language from a very basic idea of
-what a program is and actually buliding a working interpreter
-for it.
-
-1. If you want to browse the code in a readable manner, you can view
-   [slang.js.md](slang.js.md).
-
-2. If you like to have a single PDF to read, see [slang.js.pdf](slang.js.pdf).
-
-3. Docco docs for slang are also available in the `docs/` folder.
 
 [Emscripten]: https://github.com/kripken/emscripten
 

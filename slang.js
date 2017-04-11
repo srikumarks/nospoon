@@ -126,7 +126,7 @@ let run = function (env, program, pc, stack) {
             // we have to pass it our stack so that it can do whatever it needs to do
             // with the values stored on the stack.
             case 'prim':
-                stack = apply(instr, stack);
+                stack = apply(env, instr, stack);
                 break;
                 
             // In all other cases we just store the value on the stack.
@@ -1190,7 +1190,7 @@ run = function (env, program, pc, stack) {
 
         switch (instr.t) {
             case 'prim':
-                stack = apply(instr, stack);
+                stack = apply(env, instr, stack);
                 break;
 
             // Special case for block definition. We capture the
