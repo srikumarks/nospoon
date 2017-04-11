@@ -372,7 +372,7 @@ with the values stored on the stack.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:
-                stack = apply(instr, stack);
+                stack = apply(env, instr, stack);
                 <span class="hljs-keyword">break</span>;</pre></div></div>
             
         </li>
@@ -2847,7 +2847,7 @@ run = <span class="hljs-function"><span class="hljs-keyword">function</span> (<s
 
         <span class="hljs-keyword">switch</span> (instr.t) {
             <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:
-                stack = apply(instr, stack);
+                stack = apply(env, instr, stack);
                 <span class="hljs-keyword">break</span>;</pre></div></div>
             
         </li>

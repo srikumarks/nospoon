@@ -137,7 +137,7 @@ we have to pass it our stack so that it can do whatever it needs to do
 with the values stored on the stack.
 ```js
             case 'prim':
-                stack = apply(instr, stack);
+                stack = apply(env, instr, stack);
                 break;
                 
 ```
@@ -1353,7 +1353,7 @@ run = function (env, program, pc, stack) {
 
         switch (instr.t) {
             case 'prim':
-                stack = apply(instr, stack);
+                stack = apply(env, instr, stack);
                 break;
 
 ```

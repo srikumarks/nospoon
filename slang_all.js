@@ -126,7 +126,7 @@ let run = function (env, program, pc, stack) {
             // we have to pass it our stack so that it can do whatever it needs to do
             // with the values stored on the stack.
             case 'prim':
-                stack = apply(instr, stack);
+                stack = apply(env, instr, stack);
                 break;
                 
             // In all other cases we just store the value on the stack.
@@ -1190,7 +1190,7 @@ run = function (env, program, pc, stack) {
 
         switch (instr.t) {
             case 'prim':
-                stack = apply(instr, stack);
+                stack = apply(env, instr, stack);
                 break;
 
             // Special case for block definition. We capture the
@@ -2099,6 +2099,8 @@ stddefs(function (env) {
 
 // # Concurrency
 
+// **Date**: 3 April 2017
+
 // Requires slang.js, slang_vocab.js, slang_objects.js.
 "use strict";
 
@@ -2118,18 +2120,153 @@ stddefs(function (env) {
 // other things by consequence ... so that we gain the ability to
 // run "concurrent processes".
 
+// ## From sequentiality to concurrency as "beta abstraction"
+
+// When looking to model a domain, we can either come up with
+// domain concepts top-down from an existing formalism, or try
+// to figure out through trial and error in a bottom-up manner.
+// While the former approach works for domains with a clear
+// pre-existing computational formalism, we usually have to resort
+// to bottom-up formalization in domains that we don't understand
+// a priori.
+//
+// The process of figuring out concepts in a bottom-up manner
+// can appear quite haphazard. One technique that offer some guidance
+// in such an effort is "beta abstraction". In fact, you could express
+// many forms of abstraction as beta abstraction, so it is worth
+// understanding beta abstraction.
+//
+// The key idea is simple to express if we're not concerned about
+// being mathematically rigorous. 
+//
+// > Beta abstraction is about pulling out as an argument, a symbol
+// > used within the body of a function definition.
+//
+// Depending on which symbol you pull out, you gain different kinds of
+// flexibility. 
+//
+// If we have a function like this -
+// 
+// ```js
+// function f(a1,a2,...) { .... S .... }
+// ```
+//
+// then the act of "beta abstracting on `S`" is rewriting this function
+// as the application of another more abstract function to `S` - i.e.
+//
+// ```js
+// (function g(a1,a2,...) { return function (S) { .... S .... }; })(S)
+// ```
+//
+// Or to keep it simple, you can just work with a function `g` that is
+// the same as `f`, but with an additional argument `S`.
+//
+// ```js
+// function g(a1,a2,...,S) { .... S .... }
+// ```
+//
+// The function `g` is considered to be more abstract than the function `f`
+// because we can change what `S` is to achieve different ends.
+//
+// Now, while many programming language allow you to pull out symbols
+// standing for certain types of "values", they do not allow certain
+// "reserved" symbols to be passed as arguments like this. However,
+// for our purpose, we'll pretend that they do.
+// 
+// If we look at out interpreter, we have a rough structure as follows -
+//
+// ```js
+// function run(env, program, pc, stack) {
+//    for (; pc < program.length; ++pc) {
+//      ....
+//      switch (instr.t) {
+//          ....
+//      }
+//    }
+//
+//    ...
+//    return stack;
+// }
+// ```
+//
+// We can abstract on many symbols, each giving us a different
+// kind of "super power". For example, if we pull out `switch`,
+// we gain the ability to customize our interpreter, a feature 
+// which we can then reintroduce into `slang` itself, to great
+// effect. (Granted, Javascript doesn't let you pass `switch`
+// as an argument.) If we abstract on the `pc = pc + 1` part,
+// then we gain the ability to jump to different parts of a
+// program, while we can currently only step through sequentially.
+//
+// If we abstract on `return`, pretending that it is a function
+// to which we pass the result stack as an argument, and that
+// the `return` function itself never "returns" to the call site,
+// we gain another such super power - the ability to direct program
+// flow in a manner that can be exposed to `slang`. As it stands,
+// the `return` statement does something magical - you use it to
+// specify that "wherever the function `run` gets called, now go
+// back to that piece of code and *continue* with the value
+// I'm giving you as an argument". That's a pretty special "function".
+// 
+// > **Term**: In CS literature, such a "function" is called a
+// > **continuation**.
+//
+// If we pull out `return` as an argument, we gain the ability
+// to pass whatever target function to which the `run` invocation
+// must "return to". So our interpreter loop looks something like
+// this -
+//
+// ```js
+// function run(env, program, pc, stack, ret) {
+//    ... same same ...
+//    ret(stack);
+// }
+// ```
+//
+// To truly ensure that we benefit from this change though,
+// all the intermediate steps will need to be changed in the same
+// manner to take an extra "return function" argument, where we
+// pass different values depending on where we are. This is 
+// left as an exercise.
+//
+// > **Term**: Such a rewrite of a normal function in terms of
+// > functions that take an extra "return function" argument
+// > is called in CS literature as "CPS transformation" where
+// > "CPS" stands for "Continuation Passing Style". The CPS
+// > transformation is a deep transformation of normal
+// > sequential code that affects every operation. Some
+// > compilers do this as a first step to providing advanced
+// > flow control operators, including concurrency.
+//
+// While programming in the CPS style is tedious and verbose
+// in most languages, supporting CPS in a language can give
+// all sorts of cool super powers - like, for example, the
+// ability to "return" as many times as you want to the
+// call site, the ability to store away the "return function"
+// and call it at a later point in time when a particular
+// event arrives from a user, or the network, and so on.
+//
+// So we're going to start with rewriting our interpreter
+// to have our `run` function take such an extra "return
+// function" argument that we'll be calling ... `callback` :)
+// 
+// > **Note**: To Node.JS junkies, yes it's the same
+// > mundane "callback style" that gives you "callback hell"
+// > because you're programming in CPS style quite unnecessarily.
+//
+
 // ## Basic asynchronous behaviour
 
 // Before we get to concurrent processes, we'll support asynchronous
 // invocations so that we can at least use slang with Node.JS.
 //
-// The most important change is that our `run` function will no longer return
-// a value normally. Instead, it will provide its result via a callback
-// function provided to it. The callback function, if required will need
-// to be passed as the last argument to the `run` function, and must be
-// a function that accepts a stack as its sole argument. At the end of the
-// day, the callback function will be called with the current stack as
-// the sole argument.
+// We'll use beta abstraction and modify our `run` function such that it will
+// no longer return a value normally. Instead, it will provide its result via a
+// callback function provided to it. The callback function, if required will
+// need to be passed as the last argument to the `run` function, and must be a
+// function that accepts a stack as its sole argument. At the end of the day,
+// the callback function will be called with the current stack as the sole
+// argument.
 
 run = function (env, program, pc, stack, callback) {
     for (; pc < program.length; ++pc) {
@@ -2209,7 +2346,13 @@ apply = function (env, prim, stack, callback) {
 
 // ## Cooperative multi-tasking
 
-// We'll need a way to spawn off such asynchronous processes
+// While the ability to have our interpreter return asynchronously
+// is the key step in our single threaded JS environment to enable
+// concurrency, we need to explicitly use some scheduler in
+// Javascript to enable cooperative multi-tasking between different
+// sequences of interpreters.
+
+// We'll therefore need a way to spawn off such asynchronous processes
 // which will not interfere with our spawning process. We'll add a
 // primitive called `go` for that purpose. While `go` itself
 // will be a synchronous operator, it will set up a process which
@@ -2489,6 +2632,8 @@ stddefs(function (env) {
 
 // ## Communicating between processes
 
+// **Date**: 11 Apr 2017
+
 // So far, we can spawn a process and the only way we can 
 // interact with it is to await its completion, upon which
 // we'll get passed the result of that process on our stack.
@@ -2580,7 +2725,38 @@ stddefs(function (env) {
     }));
 });
 
+// ## Processes as "objects"
+
+// If you recall, we said in the section on object oriented programming that
+// that main concept behind OOP is objects which interact by passing messages
+// between them. We highlighted at that point that there is no intrinsic
+// requirement to make such message passing synchronous in the way most OOP
+// languages including the seminal Smalltalk implement.
+//
+// We now have processes that can pass messages between each other
+// asynchronously - i.e. when a process passes another a message, it doesn't
+// expect to get a "return value" immediately. Instead it is free to do other
+// activities and *maybe* ask for one or more reply messages from the target
+// process.
+//
+// So, in a sense, our "processes" are better "objects" than our "objects".
+// About the only programming language and runtime where this interpretation
+// is close to feasible is [Erlang] - which doesn't have a notion of "objects",
+// but has cheap isolated concurrent processes which can communicate with
+// each other through message passing. If you think about it, objects in our
+// real world are always concurrent - they have a clearly defined interaction
+// boundary and have their own timeline of activities they may be engaged in.
+// A clock keeps ticking, a fan keeps spinning, the TV keeps showing a
+// video on a screen, the grinder keeps mashing up food, and so on. Very
+// rarely do we have synchronicity among objects in our real world. One
+// example is perhaps an electrical switch - whose response to making or
+// breaking an electrical circuit is immediate .. for practical purposes.
+//
+// [Erlang]: https://www.erlang.org
+
 // ## Supporting objects
+
+// Let's return to our mundane symchronous world of objects for now.
 
 // We implemented message passing as method invocation in our object
 // system. That doesn't yet support asynchronous operation. We'll need
