@@ -1,7 +1,65 @@
 // % The No Spoon Series : Building Slang
 // % Srikumar K. S.
 // % 21 Feb 2017
+
+// # Introduction
+
+// Today, thanks to the wide availability of sharing and publication tools,
+// software engineers are being bombarded by new technology at a pace that many
+// are finding hard to keep up with. This is even if they've already had the
+// clarity to choose a narrow field to focus on, such as "front end
+// engineering", for which the pace is particularly unsettling. To top it,
+// engineers enter the field armed with a reasonable grasp of one major
+// programming language that they can use on their job. Once settled thus, I've
+// seen many get stuck in the "idiomatic" ways of thinking within their
+// accidentally chosen toolsets, unable to raise their head above the waves of
+// technologies sweeping past them. 
 //
+// Redeeming ourselves from this frog-in-the-well situation is not that hard as
+// the metaphor might suggest is the case in the physical world. What we need
+// is a focus on "what exactly is the new idea here?". If there is any, dive
+// in. If there is none, move on. This series is a spontaneous creation to
+// address this educational issue for software engineers to show them the
+// nature of the matrix and how to escape from it using the tools they're
+// already familiar with.
+//
+// I use a sane and simple subset of Javascript here, but it can be any main
+// stream language and the concepts should be easy enough to translate. One
+// reason for choosing Javascript is that JS programmers seem to be the ones
+// struggling the most to keep up with all the "trendy stuff". As we work within
+// this JS subset, you'll see how quickly we can rise up conceptually to what
+// has taken years to come down through the EcmaScript standardization pipeline.
+// You'll also see how some "modern" concepts are really decades old as we go on.
+//
+// The series is titled after the "The Matrix" trilogy. Not only will you learn
+// how to bend spoons, I hope you'll see that there is really no spoon.
+//
+// > **Disclaimer**: This is a work-in-progress writing that is almost written
+// > by flow of thought with a little non-linear editing thrown in. I do not
+// > guarantee that the existing structure or code will remain as is. However,
+// > I will strive to have it all be self contained and comprehensive to the
+// > extent I can. Also, this series is **not** about data structures and
+// > algorithms, but is about system building and modeling "how to knowledge".
+// 
+// Hope you have fun exploring the rabbit hole!
+// 
+// -Srikumar
+
+// ## Primary reference material
+
+// There are two primary textbooks relevant to this series. They are -
+//
+// 1. [The Structure and Interpretation of Computer Programs][SICP] by
+//    Hal Abelson and Gerald Sussman.
+//
+// 2. [Concepts, Techniques and Models of Computer Programming][royharidi] by
+//    Peter Van Roy and Seif Haridi
+//
+// [SICP]: https://mitpress.mit.edu/sicp/
+// [royharidi]: https://mitpress.mit.edu/books/concepts-techniques-and-models-computer-programming
+//
+// Other references will be mentioned as we go along.
+
 // # Building Slang
 
 // In this series, we will gradually work through implementing an interpreter
