@@ -293,12 +293,16 @@ stddefs(function (env) {
 
         let proc = process(env2, code);
 
-        // A new process will receive a stack with one element - the
-        // process itself. The block is free to pop it off and define it
-        // to a variable for multiple access. For example, a block may begin
-        // with `[parent self] args ...`. Using this process, you can send/receive 
-        // messages to yourself, or pass a reference to your process to
-        // another process you spawn, to enable two-way communication.
+        // A new process will receive a stack with two elements - the
+        // parent process, and the process itself. The block is free to
+        // pop it off and define it to a variable for multiple access.
+        // For example, a block may begin with -
+        //
+        // `[parent-process current-process] args ...`
+        //
+        // Using this technique, you can send/receive messages to yourself,
+        // or pass a reference to your process to another process you
+        // spawn, to enable two-way communication.
         let new_stack = [stack.process, proc];
         new_stack.process = proc;
         return later(function () {
@@ -335,18 +339,18 @@ stddefs(function (env) {
     // the parent process's stack. Notice that we define a two-argument
     // function here, to indicate that `await` is an asynchronous primitive.
     //
-    // In this way, `await` has behaviour similar to "promises". When a
-    // process is finished, the `await` will always fetch the result of
-    // the process, much like the way a promise immediately provides
+    // In this way, `await` has behaviour similar to "promises" or "futures".
+    // When a process is finished, the `await` will always fetch the
+    // result of the process, much like the way a promise immediately provides
     // the value that is promised once the process that produces it has
     // completed.
     //
     // Another term for such an `await` in the concurrency jargon is "join".
     // You may encounter phrases like "fork-join parallelism".
     //
-    // Yet another term for this kind of behaviour is called "future".
     // Though we've implemented these concepts in a single threaded
-    // system, we're not limited to it and we can also provide
+    // system, we're not limited to it, given some basic coordination
+    // primitives.
     define(env, 'await', prim(function (env, stack, callback) {
         let proc = pop(stack);
         console.assert(proc.t === 'process');
@@ -908,6 +912,7 @@ let copy_bindings_for_block = function (block, env, dest) {
     };
 
     scan(block.v);
+    dest['self'] = block; // The word "self" refers to the block itself within the block.
     return dest;
 };
 
@@ -1028,7 +1033,7 @@ stddefs(function (env) {
 // of environment with no change to behaviour. We can just maintain
 // a single chain of scopes.
 
-mk_env = function (base) { return { t: 'env', v: { env: {}, base: base } }; };
+mk_env = function (base) { return { t: 'env', v: { env: {}, base: base && base.v } }; };
 
 lookup = function (env, word) {
     for (let scope = env.v; scope; scope = scope.base) {
@@ -1200,3 +1205,66 @@ tests.dfvar = function () {
 // > is waiting for it. What facilities would we need to help
 // > design the process so that it won't be locked forever when
 // > such a thing happens?
+
+// ## Tests
+// ### Test prime number sieve
+tests.primesieve = function (n) {
+    let program = parse_slang(`
+        [n] args                "We stop when we reach n";
+
+        "We spawn one sieve process for each prime number we
+         find. Each sieve process filters out the factors of
+         that prime number and pipes its output to the higher
+         prime processes.";
+
+        [ receive :prime def    "The first number we get is prime";
+          prime print
+          self go :filter def   "Launch another filter process for
+                                 the next prime";
+
+          "Sieve out all factors of our prime and send it to
+           the next sieve process";
+
+          [ self :loop def
+            receive :i def      "i will not have any factors < prime";
+            i prime remainder 0 != [ filter i post ] if
+
+            i n < [ loop do ] if
+          ] do
+        ] :sieve def
+
+        sieve go :main def      "Start the first sieve";
+        
+        "Generate 2,3,4,5,... into the first sieve";
+        [ [i target] args
+          self :gen def
+          target i post
+          yield                 "Necessary for async generation";
+          i n < [i 1 + target gen do] if
+        ] :generate defun
+
+        2 main generate
+    `);
+
+    return run(test_env(), program, 0, [number(n)], function (stack) {
+        console.log("done");
+    });
+};
+
+// ### Math primitives needed for prime sieve
+
+stddefs(function (env) {
+    define(env, 'remainder', prim(function (env, stack) {
+        let den = pop(stack), num = pop(stack);
+        console.assert(den.t === 'number' && num.t === 'number');
+        return push(stack, number(num.v % den.v));
+    }));
+
+    define(env, 'quotient', prim(function (env, stack) {
+        let den = pop(stack), num = pop(stack);
+        console.assert(den.t === 'number' && num.t === 'number');
+        return push(stack, number(Math.floor(num.v / den.v)));
+    }));
+});
+
+

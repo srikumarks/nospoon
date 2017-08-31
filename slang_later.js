@@ -20,16 +20,16 @@ later = (function () {
     // of the event loop.
     let nextTick = (function () {
         try {
-            if (typeof process !== "undefined" && typeof process.nextTick === 'function') {
-                // node
-                return process.nextTick;
+            if (typeof setImmediate === "function") {
+                // In IE10, or use https://github.com/NobleJS/setImmediate
+                return setImmediate;
             } 
         } catch (e) {}
 
         try {
-            if (typeof setImmediate === "function") {
-                // In IE10, or use https://github.com/NobleJS/setImmediate
-                return setImmediate;
+            if (typeof process !== "undefined" && typeof process.nextTick === 'function') {
+                // node
+                return process.nextTick;
             } 
         } catch (e) {}
 
