@@ -2449,12 +2449,16 @@ stddefs(function (env) {
 
         let proc = process(env2, code);
 
-        // A new process will receive a stack with one element - the
-        // process itself. The block is free to pop it off and define it
-        // to a variable for multiple access. For example, a block may begin
-        // with `[parent self] args ...`. Using this process, you can send/receive 
-        // messages to yourself, or pass a reference to your process to
-        // another process you spawn, to enable two-way communication.
+        // A new process will receive a stack with two elements - the
+        // parent process, and the process itself. The block is free to
+        // pop it off and define it to a variable for multiple access.
+        // For example, a block may begin with -
+        //
+        // `[parent-process current-process] args ...`
+        //
+        // Using this technique, you can send/receive messages to yourself,
+        // or pass a reference to your process to another process you
+        // spawn, to enable two-way communication.
         let new_stack = [stack.process, proc];
         new_stack.process = proc;
         return later(function () {
@@ -2491,18 +2495,18 @@ stddefs(function (env) {
     // the parent process's stack. Notice that we define a two-argument
     // function here, to indicate that `await` is an asynchronous primitive.
     //
-    // In this way, `await` has behaviour similar to "promises". When a
-    // process is finished, the `await` will always fetch the result of
-    // the process, much like the way a promise immediately provides
+    // In this way, `await` has behaviour similar to "promises" or "futures".
+    // When a process is finished, the `await` will always fetch the
+    // result of the process, much like the way a promise immediately provides
     // the value that is promised once the process that produces it has
     // completed.
     //
     // Another term for such an `await` in the concurrency jargon is "join".
     // You may encounter phrases like "fork-join parallelism".
     //
-    // Yet another term for this kind of behaviour is called "future".
     // Though we've implemented these concepts in a single threaded
-    // system, we're not limited to it and we can also provide
+    // system, we're not limited to it, given some basic coordination
+    // primitives.
     define(env, 'await', prim(function (env, stack, callback) {
         let proc = pop(stack);
         console.assert(proc.t === 'process');
@@ -3064,6 +3068,7 @@ let copy_bindings_for_block = function (block, env, dest) {
     };
 
     scan(block.v);
+    dest['self'] = block; // The word "self" refers to the block itself within the block.
     return dest;
 };
 
@@ -3184,7 +3189,7 @@ stddefs(function (env) {
 // of environment with no change to behaviour. We can just maintain
 // a single chain of scopes.
 
-mk_env = function (base) { return { t: 'env', v: { env: {}, base: base } }; };
+mk_env = function (base) { return { t: 'env', v: { env: {}, base: base && base.v } }; };
 
 lookup = function (env, word) {
     for (let scope = env.v; scope; scope = scope.base) {
@@ -3357,6 +3362,916 @@ tests.dfvar = function () {
 // > design the process so that it won't be locked forever when
 // > such a thing happens?
 
+// ## Tests
+// ### Test prime number sieve
+tests.primesieve = function (n) {
+    let program = parse_slang(`
+        [n] args                "We stop when we reach n";
+
+        "We spawn one sieve process for each prime number we
+         find. Each sieve process filters out the factors of
+         that prime number and pipes its output to the higher
+         prime processes.";
+
+        [ receive :prime def    "The first number we get is prime";
+          prime print
+          self go :filter def   "Launch another filter process for
+                                 the next prime";
+
+          "Sieve out all factors of our prime and send it to
+           the next sieve process";
+
+          [ self :loop def
+            receive :i def      "i will not have any factors < prime";
+            i prime remainder 0 != [ filter i post ] if
+
+            i n < [ loop do ] if
+          ] do
+        ] :sieve def
+
+        sieve go :main def      "Start the first sieve";
+        
+        "Generate 2,3,4,5,... into the first sieve";
+        [ [i target] args
+          self :gen def
+          target i post
+          yield                 "Necessary for async generation";
+          i n < [i 1 + target gen do] if
+        ] :generate defun
+
+        2 main generate
+    `);
+
+    return run(test_env(), program, 0, [number(n)], function (stack) {
+        console.log("done");
+    });
+};
+
+// ### Math primitives needed for prime sieve
+
+stddefs(function (env) {
+    define(env, 'remainder', prim(function (env, stack) {
+        let den = pop(stack), num = pop(stack);
+        console.assert(den.t === 'number' && num.t === 'number');
+        return push(stack, number(num.v % den.v));
+    }));
+
+    define(env, 'quotient', prim(function (env, stack) {
+        let den = pop(stack), num = pop(stack);
+        console.assert(den.t === 'number' && num.t === 'number');
+        return push(stack, number(Math.floor(num.v / den.v)));
+    }));
+});
+
+
+// # Non-deterministic programming
+
+// **Date**: 18 Apri 2017
+
+// (Requires slang_concurrency.js and whatever it requires.)
+
+// Now that we have control over control flow within "processes",
+// we can start to play with it in ways we couldn't imagine doing
+// in our base language. 
+//
+// Non-deterministic programming refers to programming operations
+// with "choice points" such that at the time a choice is being
+// made, we don't know which choice will succeed, as that is expected
+// to be determined later on as the program continues to run.
+// As the program runs, a particular choice may end up being seen
+// as inappropriate and the program then "back tracks" to try
+// another choice.
+
+let failure = function (val) { return {t: 'fail', v: val}; };
+
+// ## The `choose` and `fail` operators
+
+stddefs(function (env) {
+
+    // The main ingredients of non-deterministic programming
+    // are a "choose" operator which choose one of several code
+    // paths in such a way that the whole program tries not to
+    // "fail". Correspondingly, there is a "fail" operator which
+    // informs the history of choice points whether the current
+    // code path satisfies the program's needs or not.
+    //
+    // While this doesn't look very different from branching
+    // at the outset, the critical difference is that it is
+    // a runtime choice and that the criterion for choosing
+    // is not available to the function at the time it has
+    // to make a choice. This information is only available
+    // later on at a higher level in the program. Therefore with
+    // the `choose` operator, functions can now be designed in
+    // such a way that they can produce more than one possible
+    // outcome. In mathematical terms, the `choose` operator
+    // permits creating functions that map one set of inputs to
+    // more than one possible output - i.e. a one-to-many mapping.
+    // The value in such a one-to-many mapping is that the
+    // combinations of such choices that result in the satisfaction
+    // of some globally determined constraints can now be the result
+    // of the program, without the functions being forced to determine
+    // things that they are not well placed to determine.
+    //
+    // Our `choose` operator takes a sequence of blocks or values
+    // and picks one that will cause the rest of the program to
+    // succeed if possible ... or it will fail to an earlier
+    // choice point. This gives us "depth-first search" of the
+    // choice tree for possible solutions.
+    // 
+   define(env, "choose", prim(function (env, stack, callback) {
+        let options = pop(stack);
+        let proc = stack.process;
+
+        console.assert(callback);
+        console.assert(options.t === "block");
+
+        if (!proc.choice_points) {
+            proc.choice_points = [];
+        }
+
+        let current_env = mk_env(env);
+
+        // We model "making a choice" as a function that takes a single
+        // integer value representing which option among the ones it has
+        // been supplied with must be tried. When the function is called,
+        // it will assume that the choice corresponding to the integer
+        // supplied is available. We keep all of this as a stack of choice
+        // points.
+        proc.choice_points.push({
+            i: 0,
+            count: options.v.length,
+            fn: function (i) {
+                // Fresh environment and stack, discarding all the
+                // other things possibly accumulated in prior choices.
+                let cp_env = mk_env(current_env);
+                let cp_stack = stack.slice(0);
+                cp_stack.process = stack.process;
+                
+                // If given a block, we evaluate it. If given
+                // any other normal value, we push it on to the stack.
+                if (options.v[i].t === "block") {
+                    run(cp_env, options.v[i].v, 0, cp_stack, callback);
+                    // > **Question**: What happens if the block we're running
+                    // > itself creates choice points or triggers a fail? Does
+                    // > that need specific support in our code? Would it
+                    // > behave correctly? If not what kinds of incorrect
+                    // > behaviour may result?
+                } else {
+                    callback(push(stack, options.v[i]));
+                }
+            }
+        });
+        
+        return back_track(stack, callback);
+    }));
+
+    //
+    // > **Question**: How will you implement a "breadth-first"
+    // > search strategy? More generally, in the spirit of making
+    // > implementation features available to our language itself,
+    // > how can we make such search strategies programmable?
+    // > 
+    // > As a task, you can take on rewriting `choose` and `fail`
+    // > to work using a breadth-first strategy, or add a new
+    // > operator to use the breadth-first strategy.
+    // 
+ 
+
+    // Our `fail` operator just triggers the back tracking mechanism
+    // to try alternative choices. Typically, you'd use `fail` within
+    // some kind of a conditional so that the failure is triggered only
+    // when some condition isn't met.
+    define(env, "fail", prim(function (env, stack, callback) {
+        return later(function (stack) { back_track(stack, callback); }, stack);
+    }));
+
+    // ## Depth-first back tracking
+    // 
+    // The act of picking a choice involves checking a
+    // choice point and if it is exhausted, moving on to earlier
+    // choice points, and continuing that until we exhaust all
+    // choice points ... at which point we give up.
+    function back_track(stack, callback) {
+        let proc = stack.process;
+        if (proc.choice_points.length === 0) {
+            // All choices exhausted. Whole program failure.
+            return later(callback, push(stack, failure(symbol('choose'))));
+        }
+
+        let choice_point = proc.choice_points[proc.choice_points.length - 1];
+        if (choice_point.i < choice_point.count) {
+            later(choice_point.fn, choice_point.i);
+            choice_point.i++;
+
+            // If we've initiated the last choice, we might
+            // as well remove the choice point from the back tracking
+            // history right away.
+            //
+            // > **Question**: Does this help? If so, how? If not, why?
+            if (choice_point.i >= choice_point.count) {
+                proc.choice_points.pop();
+            }
+        } else {
+            proc.choice_points.pop(); // Choices exhausted.
+            later(function () {
+                back_track(stack, callback);
+            });
+        }
+
+        return stack;
+    }    
+});
+
+// ## Tests
+
+// ### Test: Constraints on two choice points
+
+// This code creates two choice points and the rest of the program
+// decides to fail if the numbers chosen by these choice points don't
+// satisfy some numeric criteria.
+
+tests.two_constraints = function () {
+    let program = parse_slang(`
+        [1 2 3 4 5] choose :x def
+        [1 2 3 4 5] choose :y def
+        x y + 5 < [fail] if
+        x print y print
+        x y * 15 < [fail] if
+        "result" print
+        x print y print
+    `);
+
+    return run(test_env(), program, 0, [], function (stack) {
+        console.log("done");
+    });
+};
+
+// > **Question**: How will you implement an operator that collects
+// > all possible "solutions" in the above example instead of just
+// > picking one?
+//
+// > **Question**: Can you write a "choice point generator" that will
+// > try all natural numbers? How would you prevent the generation of
+// > infinite useless choices to try?
+
+
+// ## Non-determinism and data-flow-variables
+
+// We specified "data flow variables" to be analogous to boxes
+// that can be filled only once with a value. If we introduce choice
+// points affecting the contents of data flow variables, then the
+// side effect of filling these boxes ripples over to other processes
+// that share the DFVs. 
+//
+// > **Question**: How would the semantics of data flow variables
+// > work if the choice operator were to account for them too?
+// > In particular, how would invalidating the contents of a data flow
+// > variable in one process impact another process that doesn't have
+// > any choice points, but has proceeded because one DFV it was
+// > waiting on got filled?
+//
+// In general, such choice points do not work well with operators
+// that have side effects. At other times, the side effects are useful
+// programming aids too. So actually exploiting such choice points in
+// production code hasn't seen as wide an adoption as it might have
+// gotten, had the separation of *specifying* side effecting actions
+// from their actual performance to cause the side effects become
+// more common.
+//
+// > **Question**: What language feature that you're already familiar
+// > with do such choice points remind you of?
+// 
+
+// # Finite domain constraint programming
+
+// > **Date**: 18 April 2017  
+// > **Note**: DRAFT MODE. This section is INCOMPLETE.
+
+// Requires slang_nondet.js and whatever it requires.
+
+// In the previous section on non-deterministic programming, we
+// saw how the `choose` operator can be used to generate possibilities
+// and the `fail` operator can be used to limit these possibilities.
+// This style of programming where you specify a problem not in terms
+// of how to solve it, but in terms of what constraints must be met
+// is referred to as "constraint programming". One particularly
+// useful branch of this is "finite domain constraint programming", where
+// the "domain" of variables can take on values only from a finite set.
+// In particular, we can model such finite sets as variables which can 
+// take on a finite number of integer values.
+//
+// To start with, we'll first model these "finite domain variables" as
+// sets of integers. While a set is a powerful structure, we'll keep it
+// simple here by using an integer so that our "sets" can have a maximum
+// cardinality of 30 - i.e. we only permit integers in the range 0 to 29
+// (inclusive). Extending this with a data structure that supports larger
+// finite domains is left as an exercise to the reader. The point of this
+// section is to illustrate how to construct constraint solvers with
+// programmable strategies.
+//
+
+let fdvar = function (dom) {
+    if (typeof dom === 'number') {
+        return {t: 'fdvar', v: dom}; // `dom` is a bit field.
+    }
+
+    // `dom` is an array of pairs of integers - like this -
+    // [[2,4],[7,13]] which mean the number from 2 to 4 (inclusive)
+    // and from 7 to 13 are to be included in the set.
+    
+    let bdom = 0; // The bit field.
+
+    for (let i = 0; i < dom.length; ++i) {
+        for (let j = dom[i][0]; j <= dom[i][1]; ++j) {
+            bdom += 1 << j;
+        }
+    }
+
+    return {t: 'fdvar', v: bdom};
+};
+
+let fd_const = function (n) {
+    console.assert(n >= 0 && n < 30);
+    return fdvar(1 << n);
+};
+
+let fd_bool = function () {
+    return fdvar(3);
+};
+
+// ## Basic operations of FDVars
+
+// We need some basic operations on these finite domain variables.
+// At the minimum, we need union and intersetion of these sets,
+// and to be able to work with them like sets.
+
+let fd_universal = 1073741823;
+
+let fd_union = function (v1, v2) {
+    return fdvar(v1.v | v2.v);
+};
+
+let fd_intersection = function (v1, v2) {
+    return fdvar(v1.v & v2.v);
+};
+
+let fd_complement = function (v) {
+    return fdvar(fd_universal & ~v.v);
+};
+
+// ## Finite domain constraints
+
+// Given that our variables are numeric, we can define numeric constraint
+// operators on them. For example, "a < b" can e interpreted as a constraint
+// on the two fdvars `a` and `b` such that they can only take on values 
+// that satisfy the constraint. Therefore, after such a constraint function
+// is called, the values of both the fdvars may be modified to reflect the
+// constraint.
+
+// ### a < b
+
+// Convention is that the last argument is the one that will be
+// affected by the constraint. Implements v1 < v2.
+let fdc_lt = function (v2, v1) {
+    for (let i = 29; i >= 0; --i) {
+        if (v2.v & (1 << i)) {
+            // We have the highest set bit.
+            // Forbid all values above this for v1.
+            v1.v &= fd_universal & ~((1 << i) - 1);
+            break;
+        }
+    }
+};
+
+// ### a == b
+
+let fdc_eq = function (v1, v2) {
+    v1.v = v2.v = (v1.v & v2.v);
+};
+
+// ### a <= b
+
+// As per convention, implements v1 <= v2 where v1 is the last
+// argument.
+let fdc_lte = function (v2, v1) {
+    for (let i = 29; i >= 0; --i) {
+        if (v2.v & (1 << i)) {
+            // We have the highest set bit.
+            // Forbid all values above or equal to this for v1.
+            v1.v &= fd_universal & ~((1 << (i+1)) - 1);
+            break;
+        }
+    }
+};
+
+// ## Arithmetic constraints
+
+// Arithmetic constraints are somewhat complicated. They deal with three
+// finite domain variables, ensuring that some arithmetic relation holds
+// between them. Their constraining must necessarily affect all three
+// variables. While that is true of general constraints, we're implementing
+// primitive constraints here that constrain only the last argument.
+
+// ### a + b = c
+
+let fdc_sum = function (a, b, c) {
+    let cposs = 0;
+
+    // This is a really stupid and inefficient algorithm
+    // intended to illustrate how the constraining is done.
+    for (let i = 0; i < 30; ++i) {
+        for (let j = 0; j < 30; ++j) {
+            if ((a.v & (1 << i)) && (b.v & (1 << j))) {
+                if (i + j < 30) {
+                    cposs += (1 << (i + j));
+                }
+            }
+        }
+    }
+
+    c.v &= cposs;
+};
+
+// ### a - b = c
+
+let fdc_sub = function (a, b, c) {
+    let cposs = 0;
+
+    // This is a really stupid and inefficient algorithm
+    // intended to illustrate how the constraining is done.
+    for (let i = 0; i < 30; ++i) {
+        for (let j = 0; j < 30; ++j) {
+            if ((a.v & (1 << i)) && (b.v & (1 << j))) {
+                if (i - j >= 0 && i - j < 30) {
+                    cposs += (1 << (i - j));
+                }
+            }
+        }
+    }
+
+    c.v &= cposs;
+};
+
+// ### a * b = c
+
+let fdc_prod = function (a, b, c) {
+    let cposs = 0;
+
+    // intended to illustrate how all three variables are
+    // constrained by the arithmetic condition.
+    for (let i = 0; i < 30; ++i) {
+        for (let j = 0; j < 30; ++j) {
+            if ((a.v & (1 << i)) && (b.v & (1 << j))) {
+                if (i * j < 30) {
+                    cposs += (1 << (i * j));
+                }
+            }
+        }
+    }
+
+    c.v &= cposs;
+};
+
+// ### a / b = c
+
+let fdc_div = function (a, b, c) {
+    let cposs = 0;
+
+    // intended to illustrate how all three variables are
+    // constrained by the arithmetic condition.
+    for (let i = 0; i < 30; ++i) {
+        for (let j = 0; j < 30; ++j) {
+            if ((a.v & (1 << i)) && (b.v & (1 << j))) {
+                if (i % j === 0 && i / j < 30) {
+                    cposs += (1 << Math.round(i / j));
+                }
+            }
+        }
+    }
+
+    c.v &= cposs;
+};
+
+// ### a != b
+
+// This is an interesting case, because we can only do some
+// constraining if one of the fdvars has a domain of cardinality 1.
+let fdc_neq = function (a, b) {
+    if (a.v & (a.v - 1) === 0) {
+        b.v = b.v & ~a.v;
+    }
+};
+
+// ## Propagators
+
+// So far, we've introduced "constraints" which work to reduce the domains of
+// one or more variables participating in the constraint. In a real problem,
+// however, we have a network of these constraints. For example, we may have "a
+// + b > 10" and "a - b > 3" both needing to be satisfied. If we evaluate these
+// constraints in any one particular order, we may end up in a situation where
+// one constraint affects another variable which in turn can help reduce
+// another variable via some other constraint. 
+//
+// Constraints, therefore, need to be treated as a network and variable domain
+// reductions must *propagate* through this network whenever some domain gets
+// reduced.
+//
+// We can model such propagators as processes which continuously maintain
+// constraints on their dependent variables. When one propagator acts to reduce
+// the domain of one of its variables, it triggers other propagators attached
+// to that variable to try to reduce domains as well. Finally, all variables
+// will settle to stable or failed domains, at which point we need to decide to
+// do something about it outside the context of propagators. To start with,
+// though, propagators are processes that continuously reinforce a constraint
+// between their dependent variables.
+//
+// For another example, our primitive `fdc_neq` constraint only constrains the
+// second argument, but if after constraining the second argument, it becomes a
+// singleton set, then ideally it should be used to constrain the first
+// argument too. This triggering behaviour is what is implemented using
+// propagators propagating constraints through a dependency network.
+
+let propagator = function (constraint, variables) {
+    let output = variables[variables.length - 1];
+    let prop = {
+        t: 'propagator',
+        v: output,
+        variables: variables,
+        constraint: constraint,
+        run: function () {
+            let old_val = output.v;
+            constraint.apply(this, variables);
+            let new_val = output.v;
+            return old_val !== new_val ? 1 : 0
+        }
+    };
+
+    // Store a reference to the propagator in the variables
+    // that must trigger it when they change.
+    for (let i = variables.length - 2; i >= 0; --i) {
+        variables[i].prop = (variables[i].prop || []);
+        variables[i].prop.push(prop);
+    }
+
+    return prop;
+};
+
+// A simple loop for running constraint propagation until everything
+// settles. `variables` is an array of variables to consider.
+// Returns 'stable' or 'failed'.
+let propagate = function (variables) {
+    // We initially mark all variables as changed, so that
+    // we don't omit any propagators.
+    for (let i = 0; i < variables.length; ++i) {
+        variables[i].changed = 1;
+    }
+    
+    let changes = 0;
+
+    // We keep attempting to propagate changes until there
+    // are no changes.
+    do {
+        changes = 0;
+        
+        for (let i = 0; i < variables.length; ++i) {
+            if (variables[i].changed) {
+                // Every time we trigger a variable's propagators, we decrement
+                // its change count to account for it.
+                variables[i].changed--;
+                let props = variables[i].prop;
+                for (let i = 0; i < props.length; ++i) {
+                    let change = props[i].run();
+                    props[i].v.changed += change;
+                    changes += change;
+                }
+            }
+        }
+    } while (changes);
+
+    // We'll come here once no variables change during one
+    // iteration. This could happen because the propagators
+    // couldn't proceed further, or because they've reached
+    // a point of no solution - i.e. at least one of the
+    // variables has a zero-sized domain.
+
+    for (let i = 0; i < variables.length; ++i) {
+        if (variables[i].v === 0) {
+            // Failed propagation. Overconstrained.
+            return 'failed';
+        }
+    }
+
+    return 'stable';
+};
+
+
+
+
+// # Error conditions
+
+// > **Date**: 26 April 2017  
+// > **Note**: DRAFT MODE. This section is INCOMPLETE.
+
+// Requires `slang_nondet.js` and everything else it requires.
+
+// In the section on "non-deterministic programming", we saw how the `choose`
+// and `fail` operators can cooperate to implement a depth-first search of a
+// tree of possible code paths in order for the whole program to meet some
+// stipulated success criterion. While this is not the common way to approach
+// successful program completion, good system design involves thinking through
+// and accounting for all the kinds of error conditions that can occur in the
+// course of its lifetime. The aim of this section is to give an overview of
+// error management design choices made in various programming languages so
+// you-the-reader can have some idea of the space of possibilities as well as
+// the rationale for each.
+
+// ## What is an error condition?
+
+// At the basic level, an error condition occurs when a function is unable to
+// return a value that will continue the flow of the program. It can express
+// the fact that it cannot produce a normal value in a number of ways depending
+// on the system we're looking at, but that's the kind of condition we're
+// interested in dealing with.
+//
+// Error conditions are usually associated with a *reason* for their occurrence.
+// A function may not be able to compute its contract result if its input is
+// in not valid, ex: dividing by zero, if some system state that it needs to
+// cross reference its input with is invalid, or if an effect that a procedure
+// is trying to have on its environment fails, ex: failure to send network packet,
+// failure to open a file for writing.
+//
+// A programming system that provides for handling such conditions involves
+// both detecting the occurrence of an error and taking some action when a
+// particular type of error occurs - usually referred to as a "handler".
+// When an error simply cannot be recovered from (ex: system out of memory),
+// the only possible recourse is to crash the program, which is often a default
+// behaviour embedded into applications.
+
+// ## Encoding errors in values
+
+// The simplest approach that a function or procedure can take to signal an
+// error condition is to encode the error condition as a special return value.
+// This could be a simple numeric code or an entire object which captures more
+// detailed context about the error so that appropriate action can be taken.
+//
+// The C programming language and Go, for example, both take the option of 
+// returning an error code and expecting the caller to detect the condition
+// and take corrective action if possible. 
+//
+// Below is a simple example in the C language.
+//
+// ```c
+// int write_to_file(const char *message, const char *filename) {
+//     FILE *f = fopen(filename, "w");
+//     if (f != NULL) {
+//         return -1; // Nothing written.
+//     }
+//
+//     fprintf(f, "%s", message);
+//     fclose(f);
+//     return 0;
+// }   
+// ```
+//
+// The idea of returning special error codes is also a common feature of
+// languages featuring a strict type system, such as Haskell and Rust,
+// which feature `Option` or `Maybe` and `Result` or `Either` types.
+// Below is a trivial example of calculating the width in pixels of each 
+// column when the total width of all columns and the number of columns
+// are known.
+//
+// ```hs
+// columnSize : Int -> Int -> Maybe Int
+// columnSize width numColumns =
+//     if numColumns == 0 then
+//         Nothing
+//     else
+//         Just (width `div` numColumns)
+// ```
+//
+// The `columnSize` function withh produce a `Nothing` when presented with
+// the odd situation of no columns, and give `Just width` when presented with
+// a valid situation. In this case, we didn't need any further explanation
+// for the error condition perhaps. If we needed that, we could've used an
+// `Either` type as follows --
+//
+// ```hs
+// columnSize : Int -> Int -> Either String Int
+// columnSize width numColumns =
+//     if numColumns == 0 then
+//         Left "Can't give 0 columns"
+//     else
+//         Right (width `div` numColumns)
+// ```
+//
+// ... where the `Left` value gives some explanation about the error
+// condition instead of just saying `Nothing`.
+//
+// At some level, all error management and recovery schemes boil down to
+// representing error conditions in some data structure and passing it around
+// to some piece of code which know what to do with it.
+
+// ## Errors at the system level
+
+// Most of our programs are launched by the OS kernel as processes which get
+// their own address space. Since the kernel is expected to manage the resources
+// allocated to the processes it launches, when a process exits due to an error
+// condition, the kernel is expected to behave in such a way that system resources
+// are not leaked.
+//
+// Towards ensuring this, the kernel will release all the memory allocated to the
+// process back to the pool, close all I/O handles such as files and sockets,
+// release any shared memory or other resources and so on, when a process exits
+// either in a controlled fashion or in an unexpected fashion.
+//
+// A process may also register specific handlers for "signals". It may take
+// specific actions, such as saving its current state, when asked to abruptly
+// terminate itself due to some error condition. Thus, errors may also be injected
+// into processes externally.
+
+// ## try-catch based error management
+
+// In languages such as Java, Javascript and C++, we can mark a piece of code
+// as "error prone" by wrapping it inside a `try` block, with a `catch` clause
+// specifying code to execute when error conditions occur. Some mock code -
+//
+// ```cpp
+// int write_to_file(const char *message, const char *filename) {
+//     File *f = NULL;
+//
+//     try {
+//         FILE *f = fopen(filename, "w");
+//         if (f == NULL) { throw -1; }
+//         if (strlen(message) > 100) {
+//             throw -2;
+//         }
+//         fprintf(f, "%s", message);
+//         fclose(f);
+//         return 0;
+//     } catch (int e) {
+//         fclose(f);
+//         return e;
+//     }
+// }   
+// ```
+// 
+// If the double `fclose` is bothering you as it should, you can use the `finally` clause
+// to release resources whether the function succeeds or fails.
+//
+// ```cpp
+// int write_to_file(const char *message, const char *filename) {
+//     File *f = NULL;
+//
+//     try {
+//         FILE *f = fopen(filename, "w");
+//         if (f == NULL) { return -1; }
+//         if (strlen(message) > 100) {
+//             return -2;
+//         }
+//         fprintf(f, "%s", message);
+//         return 0;
+//     } finally {
+//         fclose(f);
+//     }
+// }   
+// ```
+//
+// Such a `finally` clause is used in these languages to specify code that must be
+// executed irrespective of whether the procedure returns normally or via some abnormal
+// means such as an exception thrown using `throw`.
+
+// ## Resource Acquisition As Initialization (RAAI)
+
+// As we saw, resource cleanup is one of the important actions to be taken when
+// errors happen. The above ways of testing for error conditions and managing
+// resource cleanup is quite onerous on the programmer and usually leads to
+// omissions that translate into resource leaks.
+//
+// C++ provides an elegant solution to this problem through the idea of 
+// block scoping associated with objects allocated on the stack. When code
+// within a block scope (portion within `{}` curly braces) completes, either
+// abnormally or normally, the C++ compiler automatically inserts the necessary
+// instructions to release all the objects that were allocated on the stack
+// within that block. Since C++ has the notion of "destructor" for objects,
+// which is a procedure called when an object is released or "destroyed",
+// we can combine these two concepts to provide for automatic and almost
+// code-free resource cleanup. The destructors of these stack allocated
+// objects are called in the reverse allocation sequence automatically.
+//
+// So what we have to do is to model resources as objects that can be allocated
+// on the stack, and put in their cleanup code within the destructors of the
+// classes of these objects. For example -
+//
+// ```cpp
+// void write_to_file(const std::string &filename, const std::string &message) {
+//     std::ostream file(filename);
+//     if (message.length() > 100) {
+//         throw std::error("Message too big");
+//     }
+//     file.write(message);
+// }
+// ```
+//
+// Since the `file` object is allocated on the stack, if the allocation failed,
+// an exception will be thrown from within `write_to_file` and none of the
+// other lines of code will run. When we `throw std::error("Message too big")`
+// as well, that marks the end of the `file` object's scope and its destructor
+// will be called before the `write_to_file` exits with an exception. If we get
+// to the end of the function normally, the end of scope will take care of
+// closing the file as well. This makes of succinct management of resource and
+// leaves little room for programmer error.
+//
+// Due to the determinate nature of C++ (i.e. non-garbage collected runtime),
+// we can build robust systems layer by layer.
+
+// ## Concurrent error management
+
+// The above cases all treated error management in single-threaded programs.
+// When we deal with highly concurrent systems, we need to resort to different
+// strategies. The language Erlang is used to build massively distributed and
+// highly available telephony systems and it features an error management
+// approach that is closer to the way the unix kernel treats processes than any
+// of the other languages.
+//
+// Erlang features light weight "processes" which are not the same as unix
+// kernel level processed. A small amount of stack and heap is associated with
+// an Erlang process when it starts (as little as 300 bytes) and multiple such
+// processes can run on a single core machine. The Erlang runtime rations
+// function call executions (called "reductions" in the Erlang world) between
+// these processes so that fine grained concurrency is possible. Each Erlang
+// process also has an associated "mailbox" into which it can receive messages
+// from other processes, even if they're across the network.
+//
+// One interesting feature of the Erlang system is that usually the code for
+// processes will consist of only the happy path and processes are recommended
+// to crash in the case of error! This may sound like blasphemy to experts in
+// other languages, but this is the basis for the high availability strategy
+// that is implemented in Erlang's OTP library. OTP is an application
+// architecture that facilitates setting up Erlang processes in supervisor
+// hierarchies. That is, if a process `S` is marked as the supervisor of
+// another process `P`, then when `P` dies by crashing, `S` gets notified by a
+// message, based on which it can choose a variety of actions. For example, `S`
+// itself can choose to crash if it doesn't know how to recover from `P`
+// crashing, or it may choose to restart `P` in a stable state and keep
+// chugging along as though nothing happened. `S` itself may be supervised by
+// another process which can apply similar logic to it child tree of processes.
+// Therefore, garbage collection in Erlang happens through process exit, in
+// addition to smaller collections within processes. Since processes share
+// nothing between them (messages between them are copied), there is almost no
+// inter-process analysis that needs to be done that can delay garbage
+// collection.
+//
+// In real world engineering, this "just crash and let the supervisor tree do
+// its thing" strategy is surprisingly effective to ensure system robustness.
+// Not all systems can be designed with this philosophy though, and Erlang's
+// low latency scheduler is a critical component that makes this strategy work
+// as effectively as it does.
+
+// ## Contextual recovery stratgies
+
+// We saw how in the C/C++/Java/Javascript language families exceptions propagate
+// "up the call stack" until one reaches code that can do something about them.
+// This implies that the local context in which the error occurs is no longer
+// available when it comes time to determining what to do about the error.
+// 
+// There are many situations in programming where this is not acceptable.
+// Many situations do not require the entire job to be restarted for certain
+// kinds of errors, but need to do it for other kinds. For example, if writing
+// to a log file raised an exception, it might be ignorable in a system where
+// the log file is not a critical component, but cannot be ignored in cases
+// where the log is, say, used as a transaction log. This means that the library
+// that features such a logging cannot decide for itself what to do, and must
+// necessarily delegate that responsibility to the caller. Local context destruction
+// through stack unwinding is a bad fit for these kinds of problems.
+//
+// A more general error handling approach is to maintain a stack of handlers and
+// include error handling options as part of a function's calling interface.
+// When an error occurs, the appropriate handler is selected and called **in-situ**,
+// without local context destruction. The handler can then **choose** whether to
+// unwind the call stack and destroy context, or adopt some other recovery strategy
+// that permits the program to continue from the point at which the error occurs.
+//
+// Common Lisp's "conditions" provide such a mechanism. This mechanism is 
+// strictly more general than the mechanisms offered by the other languages
+// discussed thus far, apart from Erlang.
+//
+// > For good examples of using Common Lisp's condition system, see the book
+// > ["Practical Common Lisp" by Peter Seibel][seibel].
+// 
+// [seibel]: http://www.amazon.in/Practical-Common-Lisp-Books-Professionals/dp/1590592395
+//
+// The error mechanism built into [muSE] is also similar in expressive power and
+// is described [here][muSE-ex].
+//
+// [muSE]: https://github.com/srikumarks/muSE
+// [muSE-ex]: https://github.com/srikumarks/muSE/wiki/ExceptionHandling
+//
+
+// ## Error management in Slang
+//
+// TODO: Implement Common Lisp-like error handling mechanism in Slang that is
+// also process aware.
+
 later = (function () {
     "use strict";
 
@@ -3378,16 +4293,16 @@ later = (function () {
     // of the event loop.
     let nextTick = (function () {
         try {
-            if (typeof process !== "undefined" && typeof process.nextTick === 'function') {
-                // node
-                return process.nextTick;
+            if (typeof setImmediate === "function") {
+                // In IE10, or use https://github.com/NobleJS/setImmediate
+                return setImmediate;
             } 
         } catch (e) {}
 
         try {
-            if (typeof setImmediate === "function") {
-                // In IE10, or use https://github.com/NobleJS/setImmediate
-                return setImmediate;
+            if (typeof process !== "undefined" && typeof process.nextTick === 'function') {
+                // node
+                return process.nextTick;
             } 
         } catch (e) {}
 

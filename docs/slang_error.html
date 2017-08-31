@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Error conditions</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="slang.html">
+                  slang.js
+                </a>
+              
+                
+                <a class="source" href="slang_concurrency.html">
+                  slang_concurrency.js
+                </a>
+              
+                
+                <a class="source" href="slang_error.html">
+                  slang_error.js
+                </a>
+              
+                
+                <a class="source" href="slang_fd.html">
+                  slang_fd.js
+                </a>
+              
+                
+                <a class="source" href="slang_nondet.html">
+                  slang_nondet.js
+                </a>
+              
+                
+                <a class="source" href="slang_objects.html">
+                  slang_objects.js
+                </a>
+              
+                
+                <a class="source" href="slang_parse.html">
+                  slang_parse.js
+                </a>
+              
+                
+                <a class="source" href="slang_vocab.html">
+                  slang_vocab.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h1 id="error-conditions">Error conditions</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Date</strong>: 26 April 2017<br><strong>Note</strong>: DRAFT MODE. This section is INCOMPLETE.</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Requires <code>slang_nondet.js</code> and everything else it requires.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>In the section on “non-deterministic programming”, we saw how the <code>choose</code>
+and <code>fail</code> operators can cooperate to implement a depth-first search of a
+tree of possible code paths in order for the whole program to meet some
+stipulated success criterion. While this is not the common way to approach
+successful program completion, good system design involves thinking through
+and accounting for all the kinds of error conditions that can occur in the
+course of its lifetime. The aim of this section is to give an overview of
+error management design choices made in various programming languages so
+you-the-reader can have some idea of the space of possibilities as well as
+the rationale for each.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <h2 id="what-is-an-error-condition-">What is an error condition?</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>At the basic level, an error condition occurs when a function is unable to
+return a value that will continue the flow of the program. It can express
+the fact that it cannot produce a normal value in a number of ways depending
+on the system we’re looking at, but that’s the kind of condition we’re
+interested in dealing with.</p>
+<p>Error conditions are usually associated with a <em>reason</em> for their occurrence.
+A function may not be able to compute its contract result if its input is
+in not valid, ex: dividing by zero, if some system state that it needs to
+cross reference its input with is invalid, or if an effect that a procedure
+is trying to have on its environment fails, ex: failure to send network packet,
+failure to open a file for writing.</p>
+<p>A programming system that provides for handling such conditions involves
+both detecting the occurrence of an error and taking some action when a
+particular type of error occurs - usually referred to as a “handler”.
+When an error simply cannot be recovered from (ex: system out of memory),
+the only possible recourse is to crash the program, which is often a default
+behaviour embedded into applications.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <h2 id="encoding-errors-in-values">Encoding errors in values</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>The simplest approach that a function or procedure can take to signal an
+error condition is to encode the error condition as a special return value.
+This could be a simple numeric code or an entire object which captures more
+detailed context about the error so that appropriate action can be taken.</p>
+<p>The C programming language and Go, for example, both take the option of 
+returning an error code and expecting the caller to detect the condition
+and take corrective action if possible. </p>
+<p>Below is a simple example in the C language.</p>
+<pre><code class="lang-c"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *message, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *filename)</span> </span>{
+    FILE *f = fopen(filename, <span class="hljs-string">"w"</span>);
+    <span class="hljs-keyword">if</span> (f != <span class="hljs-literal">NULL</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>; <span class="hljs-comment">// Nothing written.</span>
+    }
+
+    <span class="hljs-built_in">fprintf</span>(f, <span class="hljs-string">"%s"</span>, message);
+    fclose(f);
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre>
+<p>The idea of returning special error codes is also a common feature of
+languages featuring a strict type system, such as Haskell and Rust,
+which feature <code>Option</code> or <code>Maybe</code> and <code>Result</code> or <code>Either</code> types.
+Below is a trivial example of calculating the width in pixels of each 
+column when the total width of all columns and the number of columns
+are known.</p>
+<pre><code class="lang-hs"><span class="hljs-title">columnSize</span> : <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span>
+<span class="hljs-title">columnSize</span> width numColumns =
+    <span class="hljs-keyword">if</span> numColumns == <span class="hljs-number">0</span> <span class="hljs-keyword">then</span>
+        <span class="hljs-type">Nothing</span>
+    <span class="hljs-keyword">else</span>
+        <span class="hljs-type">Just</span> (width `div` numColumns)
+</code></pre>
+<p>The <code>columnSize</code> function withh produce a <code>Nothing</code> when presented with
+the odd situation of no columns, and give <code>Just width</code> when presented with
+a valid situation. In this case, we didn’t need any further explanation
+for the error condition perhaps. If we needed that, we could’ve used an
+<code>Either</code> type as follows –</p>
+<pre><code class="lang-hs"><span class="hljs-title">columnSize</span> : <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Either</span> <span class="hljs-type">String</span> <span class="hljs-type">Int</span>
+<span class="hljs-title">columnSize</span> width numColumns =
+    <span class="hljs-keyword">if</span> numColumns == <span class="hljs-number">0</span> <span class="hljs-keyword">then</span>
+        <span class="hljs-type">Left</span> <span class="hljs-string">"Can't give 0 columns"</span>
+    <span class="hljs-keyword">else</span>
+        <span class="hljs-type">Right</span> (width `div` numColumns)
+</code></pre>
+<p>… where the <code>Left</code> value gives some explanation about the error
+condition instead of just saying <code>Nothing</code>.</p>
+<p>At some level, all error management and recovery schemes boil down to
+representing error conditions in some data structure and passing it around
+to some piece of code which know what to do with it.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <h2 id="errors-at-the-system-level">Errors at the system level</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Most of our programs are launched by the OS kernel as processes which get
+their own address space. Since the kernel is expected to manage the resources
+allocated to the processes it launches, when a process exits due to an error
+condition, the kernel is expected to behave in such a way that system resources
+are not leaked.</p>
+<p>Towards ensuring this, the kernel will release all the memory allocated to the
+process back to the pool, close all I/O handles such as files and sockets,
+release any shared memory or other resources and so on, when a process exits
+either in a controlled fashion or in an unexpected fashion.</p>
+<p>A process may also register specific handlers for “signals”. It may take
+specific actions, such as saving its current state, when asked to abruptly
+terminate itself due to some error condition. Thus, errors may also be injected
+into processes externally.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <h2 id="try-catch-based-error-management">try-catch based error management</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>In languages such as Java, Javascript and C++, we can mark a piece of code
+as “error prone” by wrapping it inside a <code>try</code> block, with a <code>catch</code> clause
+specifying code to execute when error conditions occur. Some mock code -</p>
+<pre><code class="lang-cpp"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *message, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *filename)</span> </span>{
+    File *f = <span class="hljs-literal">NULL</span>;
+
+    <span class="hljs-keyword">try</span> {
+        FILE *f = fopen(filename, <span class="hljs-string">"w"</span>);
+        <span class="hljs-keyword">if</span> (f == <span class="hljs-literal">NULL</span>) { <span class="hljs-keyword">throw</span> <span class="hljs-number">-1</span>; }
+        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">strlen</span>(message) &gt; <span class="hljs-number">100</span>) {
+            <span class="hljs-keyword">throw</span> <span class="hljs-number">-2</span>;
+        }
+        <span class="hljs-built_in">fprintf</span>(f, <span class="hljs-string">"%s"</span>, message);
+        fclose(f);
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+    } <span class="hljs-keyword">catch</span> (<span class="hljs-keyword">int</span> e) {
+        fclose(f);
+        <span class="hljs-keyword">return</span> e;
+    }
+}
+</code></pre>
+<p>If the double <code>fclose</code> is bothering you as it should, you can use the <code>finally</code> clause
+to release resources whether the function succeeds or fails.</p>
+<pre><code class="lang-cpp"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *message, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *filename)</span> </span>{
+    File *f = <span class="hljs-literal">NULL</span>;
+
+    <span class="hljs-keyword">try</span> {
+        FILE *f = fopen(filename, <span class="hljs-string">"w"</span>);
+        <span class="hljs-keyword">if</span> (f == <span class="hljs-literal">NULL</span>) { <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>; }
+        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">strlen</span>(message) &gt; <span class="hljs-number">100</span>) {
+            <span class="hljs-keyword">return</span> <span class="hljs-number">-2</span>;
+        }
+        <span class="hljs-built_in">fprintf</span>(f, <span class="hljs-string">"%s"</span>, message);
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+    } finally {
+        fclose(f);
+    }
+}
+</code></pre>
+<p>Such a <code>finally</code> clause is used in these languages to specify code that must be
+executed irrespective of whether the procedure returns normally or via some abnormal
+means such as an exception thrown using <code>throw</code>.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <h2 id="resource-acquisition-as-initialization-raai-">Resource Acquisition As Initialization (RAAI)</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>As we saw, resource cleanup is one of the important actions to be taken when
+errors happen. The above ways of testing for error conditions and managing
+resource cleanup is quite onerous on the programmer and usually leads to
+omissions that translate into resource leaks.</p>
+<p>C++ provides an elegant solution to this problem through the idea of 
+block scoping associated with objects allocated on the stack. When code
+within a block scope (portion within <code>{}</code> curly braces) completes, either
+abnormally or normally, the C++ compiler automatically inserts the necessary
+instructions to release all the objects that were allocated on the stack
+within that block. Since C++ has the notion of “destructor” for objects,
+which is a procedure called when an object is released or “destroyed”,
+we can combine these two concepts to provide for automatic and almost
+code-free resource cleanup. The destructors of these stack allocated
+objects are called in the reverse allocation sequence automatically.</p>
+<p>So what we have to do is to model resources as objects that can be allocated
+on the stack, and put in their cleanup code within the destructors of the
+classes of these objects. For example -</p>
+<pre><code class="lang-cpp"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span> &amp;filename, <span class="hljs-keyword">const</span> <span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span> &amp;message)</span> </span>{
+    <span class="hljs-built_in">std</span>::<span class="hljs-function">ostream <span class="hljs-title">file</span><span class="hljs-params">(filename)</span></span>;
+    <span class="hljs-keyword">if</span> (message.length() &gt; <span class="hljs-number">100</span>) {
+        <span class="hljs-keyword">throw</span> <span class="hljs-built_in">std</span>::error(<span class="hljs-string">"Message too big"</span>);
+    }
+    file.write(message);
+}
+</code></pre>
+<p>Since the <code>file</code> object is allocated on the stack, if the allocation failed,
+an exception will be thrown from within <code>write_to_file</code> and none of the
+other lines of code will run. When we <code>throw std::error(&quot;Message too big&quot;)</code>
+as well, that marks the end of the <code>file</code> object’s scope and its destructor
+will be called before the <code>write_to_file</code> exits with an exception. If we get
+to the end of the function normally, the end of scope will take care of
+closing the file as well. This makes of succinct management of resource and
+leaves little room for programmer error.</p>
+<p>Due to the determinate nature of C++ (i.e. non-garbage collected runtime),
+we can build robust systems layer by layer.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <h2 id="concurrent-error-management">Concurrent error management</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>The above cases all treated error management in single-threaded programs.
+When we deal with highly concurrent systems, we need to resort to different
+strategies. The language Erlang is used to build massively distributed and
+highly available telephony systems and it features an error management
+approach that is closer to the way the unix kernel treats processes than any
+of the other languages.</p>
+<p>Erlang features light weight “processes” which are not the same as unix
+kernel level processed. A small amount of stack and heap is associated with
+an Erlang process when it starts (as little as 300 bytes) and multiple such
+processes can run on a single core machine. The Erlang runtime rations
+function call executions (called “reductions” in the Erlang world) between
+these processes so that fine grained concurrency is possible. Each Erlang
+process also has an associated “mailbox” into which it can receive messages
+from other processes, even if they’re across the network.</p>
+<p>One interesting feature of the Erlang system is that usually the code for
+processes will consist of only the happy path and processes are recommended
+to crash in the case of error! This may sound like blasphemy to experts in
+other languages, but this is the basis for the high availability strategy
+that is implemented in Erlang’s OTP library. OTP is an application
+architecture that facilitates setting up Erlang processes in supervisor
+hierarchies. That is, if a process <code>S</code> is marked as the supervisor of
+another process <code>P</code>, then when <code>P</code> dies by crashing, <code>S</code> gets notified by a
+message, based on which it can choose a variety of actions. For example, <code>S</code>
+itself can choose to crash if it doesn’t know how to recover from <code>P</code>
+crashing, or it may choose to restart <code>P</code> in a stable state and keep
+chugging along as though nothing happened. <code>S</code> itself may be supervised by
+another process which can apply similar logic to it child tree of processes.
+Therefore, garbage collection in Erlang happens through process exit, in
+addition to smaller collections within processes. Since processes share
+nothing between them (messages between them are copied), there is almost no
+inter-process analysis that needs to be done that can delay garbage
+collection.</p>
+<p>In real world engineering, this “just crash and let the supervisor tree do
+its thing” strategy is surprisingly effective to ensure system robustness.
+Not all systems can be designed with this philosophy though, and Erlang’s
+low latency scheduler is a critical component that makes this strategy work
+as effectively as it does.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <h2 id="contextual-recovery-stratgies">Contextual recovery stratgies</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>We saw how in the C/C++/Java/Javascript language families exceptions propagate
+“up the call stack” until one reaches code that can do something about them.
+This implies that the local context in which the error occurs is no longer
+available when it comes time to determining what to do about the error.</p>
+<p>There are many situations in programming where this is not acceptable.
+Many situations do not require the entire job to be restarted for certain
+kinds of errors, but need to do it for other kinds. For example, if writing
+to a log file raised an exception, it might be ignorable in a system where
+the log file is not a critical component, but cannot be ignored in cases
+where the log is, say, used as a transaction log. This means that the library
+that features such a logging cannot decide for itself what to do, and must
+necessarily delegate that responsibility to the caller. Local context destruction
+through stack unwinding is a bad fit for these kinds of problems.</p>
+<p>A more general error handling approach is to maintain a stack of handlers and
+include error handling options as part of a function’s calling interface.
+When an error occurs, the appropriate handler is selected and called <strong>in-situ</strong>,
+without local context destruction. The handler can then <strong>choose</strong> whether to
+unwind the call stack and destroy context, or adopt some other recovery strategy
+that permits the program to continue from the point at which the error occurs.</p>
+<p>Common Lisp’s “conditions” provide such a mechanism. This mechanism is 
+strictly more general than the mechanisms offered by the other languages
+discussed thus far, apart from Erlang.</p>
+<blockquote>
+<p>For good examples of using Common Lisp’s condition system, see the book
+<a href="http://www.amazon.in/Practical-Common-Lisp-Books-Professionals/dp/1590592395">“Practical Common Lisp” by Peter Seibel</a>.</p>
+</blockquote>
+<p>The error mechanism built into <a href="https://github.com/srikumarks/muSE">muSE</a> is also similar in expressive power and
+is described <a href="https://github.com/srikumarks/muSE/wiki/ExceptionHandling">here</a>.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <h2 id="error-management-in-slang">Error management in Slang</h2>
+<p>TODO: Implement Common Lisp-like error handling mechanism in Slang that is
+also process aware.</p>
+
+            </div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

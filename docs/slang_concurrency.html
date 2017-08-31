@@ -30,6 +30,21 @@
                 </a>
               
                 
+                <a class="source" href="slang_error.html">
+                  slang_error.js
+                </a>
+              
+                
+                <a class="source" href="slang_fd.html">
+                  slang_fd.js
+                </a>
+              
+                
+                <a class="source" href="slang_nondet.html">
+                  slang_nondet.js
+                </a>
+              
+                
                 <a class="source" href="slang_objects.html">
                   slang_objects.js
                 </a>
@@ -557,12 +572,14 @@ empty stack.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-21">&#182;</a>
               </div>
-              <p>A new process will receive a stack with one element - the
-process itself. The block is free to pop it off and define it
-to a variable for multiple access. For example, a block may begin
-with <code>[parent self] args ...</code>. Using this process, you can send/receive 
-messages to yourself, or pass a reference to your process to
-another process you spawn, to enable two-way communication.</p>
+              <p>A new process will receive a stack with two elements - the
+parent process, and the process itself. The block is free to
+pop it off and define it to a variable for multiple access.
+For example, a block may begin with -</p>
+<p><code>[parent-process current-process] args ...</code></p>
+<p>Using this technique, you can send/receive messages to yourself,
+or pass a reference to your process to another process you
+spawn, to enable two-way communication.</p>
 
             </div>
             
@@ -622,16 +639,16 @@ in the spawning process pausing until the spawned process finishes,
 and then it will end with the result of the spawned process on
 the parent process’s stack. Notice that we define a two-argument
 function here, to indicate that <code>await</code> is an asynchronous primitive.</p>
-<p>In this way, <code>await</code> has behaviour similar to “promises”. When a
-process is finished, the <code>await</code> will always fetch the result of
-the process, much like the way a promise immediately provides
+<p>In this way, <code>await</code> has behaviour similar to “promises” or “futures”.
+When a process is finished, the <code>await</code> will always fetch the
+result of the process, much like the way a promise immediately provides
 the value that is promised once the process that produces it has
 completed.</p>
 <p>Another term for such an <code>await</code> in the concurrency jargon is “join”.
 You may encounter phrases like “fork-join parallelism”.</p>
-<p>Yet another term for this kind of behaviour is called “future”.
-Though we’ve implemented these concepts in a single threaded
-system, we’re not limited to it and we can also provide</p>
+<p>Though we’ve implemented these concepts in a single threaded
+system, we’re not limited to it, given some basic coordination
+primitives.</p>
 
             </div>
             
@@ -1654,6 +1671,7 @@ or not.</p>
     };
 
     scan(block.v);
+    dest[<span class="hljs-string">'self'</span>] = block; <span class="hljs-comment">// The word "self" refers to the block itself within the block.</span>
     <span class="hljs-keyword">return</span> dest;
 };</pre></div></div>
             
@@ -1875,7 +1893,7 @@ a single chain of scopes.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-mk_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">base</span>) </span>{ <span class="hljs-keyword">return</span> { <span class="hljs-attr">t</span>: <span class="hljs-string">'env'</span>, <span class="hljs-attr">v</span>: { <span class="hljs-attr">env</span>: {}, <span class="hljs-attr">base</span>: base } }; };
+mk_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">base</span>) </span>{ <span class="hljs-keyword">return</span> { <span class="hljs-attr">t</span>: <span class="hljs-string">'env'</span>, <span class="hljs-attr">v</span>: { <span class="hljs-attr">env</span>: {}, <span class="hljs-attr">base</span>: base &amp;&amp; base.v } }; };
 
 lookup = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, word</span>) </span>{
     <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> scope = env.v; scope; scope = scope.base) {
@@ -2154,6 +2172,91 @@ such a thing happens?</p>
 </blockquote>
 
             </div>
+            
+        </li>
+        
+        
+        <li id="section-81">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-81">&#182;</a>
+              </div>
+              <h2 id="tests">Tests</h2>
+<h3 id="test-prime-number-sieve">Test prime number sieve</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>tests.primesieve = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) </span>{
+    <span class="hljs-keyword">let</span> program = parse_slang(<span class="hljs-string">`
+        [n] args                "We stop when we reach n";
+
+        "We spawn one sieve process for each prime number we
+         find. Each sieve process filters out the factors of
+         that prime number and pipes its output to the higher
+         prime processes.";
+
+        [ receive :prime def    "The first number we get is prime";
+          prime print
+          self go :filter def   "Launch another filter process for
+                                 the next prime";
+
+          "Sieve out all factors of our prime and send it to
+           the next sieve process";
+
+          [ self :loop def
+            receive :i def      "i will not have any factors &lt; prime";
+            i prime remainder 0 != [ filter i post ] if
+
+            i n &lt; [ loop do ] if
+          ] do
+        ] :sieve def
+
+        sieve go :main def      "Start the first sieve";
+        
+        "Generate 2,3,4,5,... into the first sieve";
+        [ [i target] args
+          self :gen def
+          target i post
+          yield                 "Necessary for async generation";
+          i n &lt; [i 1 + target gen do] if
+        ] :generate defun
+
+        2 main generate
+    `</span>);
+
+    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [number(n)], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"done"</span>);
+    });
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-82">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-82">&#182;</a>
+              </div>
+              <h3 id="math-primitives-needed-for-prime-sieve">Math primitives needed for prime sieve</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
+    define(env, <span class="hljs-string">'remainder'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> den = pop(stack), num = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(den.t === <span class="hljs-string">'number'</span> &amp;&amp; num.t === <span class="hljs-string">'number'</span>);
+        <span class="hljs-keyword">return</span> push(stack, number(num.v % den.v));
+    }));
+
+    define(env, <span class="hljs-string">'quotient'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> den = pop(stack), num = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(den.t === <span class="hljs-string">'number'</span> &amp;&amp; num.t === <span class="hljs-string">'number'</span>);
+        <span class="hljs-keyword">return</span> push(stack, number(<span class="hljs-built_in">Math</span>.floor(num.v / den.v)));
+    }));
+});</pre></div></div>
             
         </li>
         

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Finite domain constraint programming</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="slang.html">
+                  slang.js
+                </a>
+              
+                
+                <a class="source" href="slang_concurrency.html">
+                  slang_concurrency.js
+                </a>
+              
+                
+                <a class="source" href="slang_error.html">
+                  slang_error.js
+                </a>
+              
+                
+                <a class="source" href="slang_fd.html">
+                  slang_fd.js
+                </a>
+              
+                
+                <a class="source" href="slang_nondet.html">
+                  slang_nondet.js
+                </a>
+              
+                
+                <a class="source" href="slang_objects.html">
+                  slang_objects.js
+                </a>
+              
+                
+                <a class="source" href="slang_parse.html">
+                  slang_parse.js
+                </a>
+              
+                
+                <a class="source" href="slang_vocab.html">
+                  slang_vocab.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h1 id="finite-domain-constraint-programming">Finite domain constraint programming</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <blockquote>
+<p><strong>Date</strong>: 18 April 2017<br><strong>Note</strong>: DRAFT MODE. This section is INCOMPLETE.</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Requires slang_nondet.js and whatever it requires.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>In the previous section on non-deterministic programming, we
+saw how the <code>choose</code> operator can be used to generate possibilities
+and the <code>fail</code> operator can be used to limit these possibilities.
+This style of programming where you specify a problem not in terms
+of how to solve it, but in terms of what constraints must be met
+is referred to as “constraint programming”. One particularly
+useful branch of this is “finite domain constraint programming”, where
+the “domain” of variables can take on values only from a finite set.
+In particular, we can model such finite sets as variables which can 
+take on a finite number of integer values.</p>
+<p>To start with, we’ll first model these “finite domain variables” as
+sets of integers. While a set is a powerful structure, we’ll keep it
+simple here by using an integer so that our “sets” can have a maximum
+cardinality of 30 - i.e. we only permit integers in the range 0 to 29
+(inclusive). Extending this with a data structure that supports larger
+finite domains is left as an exercise to the reader. The point of this
+section is to illustrate how to construct constraint solvers with
+programmable strategies.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> fdvar = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">dom</span>) </span>{
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> dom === <span class="hljs-string">'number'</span>) {
+        <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'fdvar'</span>, <span class="hljs-attr">v</span>: dom}; <span class="hljs-comment">// `dom` is a bit field.</span>
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p><code>dom</code> is an array of pairs of integers - like this -
+[[2,4],[7,13]] which mean the number from 2 to 4 (inclusive)
+and from 7 to 13 are to be included in the set.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    
+    <span class="hljs-keyword">let</span> bdom = <span class="hljs-number">0</span>; <span class="hljs-comment">// The bit field.</span>
+
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; dom.length; ++i) {
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> j = dom[i][<span class="hljs-number">0</span>]; j &lt;= dom[i][<span class="hljs-number">1</span>]; ++j) {
+            bdom += <span class="hljs-number">1</span> &lt;&lt; j;
+        }
+    }
+
+    <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'fdvar'</span>, <span class="hljs-attr">v</span>: bdom};
+};
+
+<span class="hljs-keyword">let</span> fd_const = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) </span>{
+    <span class="hljs-built_in">console</span>.assert(n &gt;= <span class="hljs-number">0</span> &amp;&amp; n &lt; <span class="hljs-number">30</span>);
+    <span class="hljs-keyword">return</span> fdvar(<span class="hljs-number">1</span> &lt;&lt; n);
+};
+
+<span class="hljs-keyword">let</span> fd_bool = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">return</span> fdvar(<span class="hljs-number">3</span>);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <h2 id="basic-operations-of-fdvars">Basic operations of FDVars</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>We need some basic operations on these finite domain variables.
+At the minimum, we need union and intersetion of these sets,
+and to be able to work with them like sets.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> fd_universal = <span class="hljs-number">1073741823</span>;
+
+<span class="hljs-keyword">let</span> fd_union = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">v1, v2</span>) </span>{
+    <span class="hljs-keyword">return</span> fdvar(v1.v | v2.v);
+};
+
+<span class="hljs-keyword">let</span> fd_intersection = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">v1, v2</span>) </span>{
+    <span class="hljs-keyword">return</span> fdvar(v1.v &amp; v2.v);
+};
+
+<span class="hljs-keyword">let</span> fd_complement = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">v</span>) </span>{
+    <span class="hljs-keyword">return</span> fdvar(fd_universal &amp; ~v.v);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <h2 id="finite-domain-constraints">Finite domain constraints</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>Given that our variables are numeric, we can define numeric constraint
+operators on them. For example, “a &lt; b” can e interpreted as a constraint
+on the two fdvars <code>a</code> and <code>b</code> such that they can only take on values 
+that satisfy the constraint. Therefore, after such a constraint function
+is called, the values of both the fdvars may be modified to reflect the
+constraint.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <h3 id="a-b">a &lt; b</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Convention is that the last argument is the one that will be
+affected by the constraint. Implements v1 &lt; v2.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> fdc_lt = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">v2, v1</span>) </span>{
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">29</span>; i &gt;= <span class="hljs-number">0</span>; --i) {
+        <span class="hljs-keyword">if</span> (v2.v &amp; (<span class="hljs-number">1</span> &lt;&lt; i)) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>We have the highest set bit.
+Forbid all values above this for v1.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            v1.v &amp;= fd_universal &amp; ~((<span class="hljs-number">1</span> &lt;&lt; i) - <span class="hljs-number">1</span>);
+            <span class="hljs-keyword">break</span>;
+        }
+    }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <h3 id="a-b">a == b</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> fdc_eq = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">v1, v2</span>) </span>{
+    v1.v = v2.v = (v1.v &amp; v2.v);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <h3 id="a-b">a &lt;= b</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>As per convention, implements v1 &lt;= v2 where v1 is the last
+argument.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> fdc_lte = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">v2, v1</span>) </span>{
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">29</span>; i &gt;= <span class="hljs-number">0</span>; --i) {
+        <span class="hljs-keyword">if</span> (v2.v &amp; (<span class="hljs-number">1</span> &lt;&lt; i)) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>We have the highest set bit.
+Forbid all values above or equal to this for v1.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            v1.v &amp;= fd_universal &amp; ~((<span class="hljs-number">1</span> &lt;&lt; (i+<span class="hljs-number">1</span>)) - <span class="hljs-number">1</span>);
+            <span class="hljs-keyword">break</span>;
+        }
+    }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <h2 id="arithmetic-constraints">Arithmetic constraints</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>Arithmetic constraints are somewhat complicated. They deal with three
+finite domain variables, ensuring that some arithmetic relation holds
+between them. Their constraining must necessarily affect all three
+variables. While that is true of general constraints, we’re implementing
+primitive constraints here that constrain only the last argument.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <h3 id="a-b-c">a + b = c</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> fdc_sum = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">a, b, c</span>) </span>{
+    <span class="hljs-keyword">let</span> cposs = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>This is a really stupid and inefficient algorithm
+intended to illustrate how the constraining is done.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">30</span>; ++i) {
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> j = <span class="hljs-number">0</span>; j &lt; <span class="hljs-number">30</span>; ++j) {
+            <span class="hljs-keyword">if</span> ((a.v &amp; (<span class="hljs-number">1</span> &lt;&lt; i)) &amp;&amp; (b.v &amp; (<span class="hljs-number">1</span> &lt;&lt; j))) {
+                <span class="hljs-keyword">if</span> (i + j &lt; <span class="hljs-number">30</span>) {
+                    cposs += (<span class="hljs-number">1</span> &lt;&lt; (i + j));
+                }
+            }
+        }
+    }
+
+    c.v &amp;= cposs;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <h3 id="a-b-c">a - b = c</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> fdc_sub = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">a, b, c</span>) </span>{
+    <span class="hljs-keyword">let</span> cposs = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>This is a really stupid and inefficient algorithm
+intended to illustrate how the constraining is done.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">30</span>; ++i) {
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> j = <span class="hljs-number">0</span>; j &lt; <span class="hljs-number">30</span>; ++j) {
+            <span class="hljs-keyword">if</span> ((a.v &amp; (<span class="hljs-number">1</span> &lt;&lt; i)) &amp;&amp; (b.v &amp; (<span class="hljs-number">1</span> &lt;&lt; j))) {
+                <span class="hljs-keyword">if</span> (i - j &gt;= <span class="hljs-number">0</span> &amp;&amp; i - j &lt; <span class="hljs-number">30</span>) {
+                    cposs += (<span class="hljs-number">1</span> &lt;&lt; (i - j));
+                }
+            }
+        }
+    }
+
+    c.v &amp;= cposs;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <h3 id="a-b-c">a * b = c</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> fdc_prod = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">a, b, c</span>) </span>{
+    <span class="hljs-keyword">let</span> cposs = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>intended to illustrate how all three variables are
+constrained by the arithmetic condition.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">30</span>; ++i) {
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> j = <span class="hljs-number">0</span>; j &lt; <span class="hljs-number">30</span>; ++j) {
+            <span class="hljs-keyword">if</span> ((a.v &amp; (<span class="hljs-number">1</span> &lt;&lt; i)) &amp;&amp; (b.v &amp; (<span class="hljs-number">1</span> &lt;&lt; j))) {
+                <span class="hljs-keyword">if</span> (i * j &lt; <span class="hljs-number">30</span>) {
+                    cposs += (<span class="hljs-number">1</span> &lt;&lt; (i * j));
+                }
+            }
+        }
+    }
+
+    c.v &amp;= cposs;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <h3 id="a-b-c">a / b = c</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> fdc_div = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">a, b, c</span>) </span>{
+    <span class="hljs-keyword">let</span> cposs = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>intended to illustrate how all three variables are
+constrained by the arithmetic condition.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">30</span>; ++i) {
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> j = <span class="hljs-number">0</span>; j &lt; <span class="hljs-number">30</span>; ++j) {
+            <span class="hljs-keyword">if</span> ((a.v &amp; (<span class="hljs-number">1</span> &lt;&lt; i)) &amp;&amp; (b.v &amp; (<span class="hljs-number">1</span> &lt;&lt; j))) {
+                <span class="hljs-keyword">if</span> (i % j === <span class="hljs-number">0</span> &amp;&amp; i / j &lt; <span class="hljs-number">30</span>) {
+                    cposs += (<span class="hljs-number">1</span> &lt;&lt; <span class="hljs-built_in">Math</span>.round(i / j));
+                }
+            }
+        }
+    }
+
+    c.v &amp;= cposs;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <h3 id="a-b">a != b</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>This is an interesting case, because we can only do some
+constraining if one of the fdvars has a domain of cardinality 1.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> fdc_neq = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">a, b</span>) </span>{
+    <span class="hljs-keyword">if</span> (a.v &amp; (a.v - <span class="hljs-number">1</span>) === <span class="hljs-number">0</span>) {
+        b.v = b.v &amp; ~a.v;
+    }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <h2 id="propagators">Propagators</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>So far, we’ve introduced “constraints” which work to reduce the domains of
+one or more variables participating in the constraint. In a real problem,
+however, we have a network of these constraints. For example, we may have “a</p>
+<ul>
+<li>b &gt; 10” and “a - b &gt; 3” both needing to be satisfied. If we evaluate these
+constraints in any one particular order, we may end up in a situation where
+one constraint affects another variable which in turn can help reduce
+another variable via some other constraint. </li>
+</ul>
+<p>Constraints, therefore, need to be treated as a network and variable domain
+reductions must <em>propagate</em> through this network whenever some domain gets
+reduced.</p>
+<p>We can model such propagators as processes which continuously maintain
+constraints on their dependent variables. When one propagator acts to reduce
+the domain of one of its variables, it triggers other propagators attached
+to that variable to try to reduce domains as well. Finally, all variables
+will settle to stable or failed domains, at which point we need to decide to
+do something about it outside the context of propagators. To start with,
+though, propagators are processes that continuously reinforce a constraint
+between their dependent variables.</p>
+<p>For another example, our primitive <code>fdc_neq</code> constraint only constrains the
+second argument, but if after constraining the second argument, it becomes a
+singleton set, then ideally it should be used to constrain the first
+argument too. This triggering behaviour is what is implemented using
+propagators propagating constraints through a dependency network.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">let</span> propagator = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">constraint, variables</span>) </span>{
+    <span class="hljs-keyword">let</span> output = variables[variables.length - <span class="hljs-number">1</span>];
+    <span class="hljs-keyword">let</span> prop = {
+        <span class="hljs-attr">t</span>: <span class="hljs-string">'propagator'</span>,
+        <span class="hljs-attr">v</span>: output,
+        <span class="hljs-attr">variables</span>: variables,
+        <span class="hljs-attr">constraint</span>: constraint,
+        <span class="hljs-attr">run</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            <span class="hljs-keyword">let</span> old_val = output.v;
+            constraint.apply(<span class="hljs-keyword">this</span>, variables);
+            <span class="hljs-keyword">let</span> new_val = output.v;
+            <span class="hljs-keyword">return</span> old_val !== new_val ? <span class="hljs-number">1</span> : <span class="hljs-number">0</span>
+        }
+    };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>Store a reference to the propagator in the variables
+that must trigger it when they change.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = variables.length - <span class="hljs-number">2</span>; i &gt;= <span class="hljs-number">0</span>; --i) {
+        variables[i].prop = (variables[i].prop || []);
+        variables[i].prop.push(prop);
+    }
+
+    <span class="hljs-keyword">return</span> prop;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>A simple loop for running constraint propagation until everything
+settles. <code>variables</code> is an array of variables to consider.
+Returns ‘stable’ or ‘failed’.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> propagate = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">variables</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>We initially mark all variables as changed, so that
+we don’t omit any propagators.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; variables.length; ++i) {
+        variables[i].changed = <span class="hljs-number">1</span>;
+    }
+    
+    <span class="hljs-keyword">let</span> changes = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>We keep attempting to propagate changes until there
+are no changes.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">do</span> {
+        changes = <span class="hljs-number">0</span>;
+        
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; variables.length; ++i) {
+            <span class="hljs-keyword">if</span> (variables[i].changed) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>Every time we trigger a variable’s propagators, we decrement
+its change count to account for it.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                variables[i].changed--;
+                <span class="hljs-keyword">let</span> props = variables[i].prop;
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; props.length; ++i) {
+                    <span class="hljs-keyword">let</span> change = props[i].run();
+                    props[i].v.changed += change;
+                    changes += change;
+                }
+            }
+        }
+    } <span class="hljs-keyword">while</span> (changes);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>We’ll come here once no variables change during one
+iteration. This could happen because the propagators
+couldn’t proceed further, or because they’ve reached
+a point of no solution - i.e. at least one of the
+variables has a zero-sized domain.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; variables.length; ++i) {
+        <span class="hljs-keyword">if</span> (variables[i].v === <span class="hljs-number">0</span>) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>Failed propagation. Overconstrained.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">return</span> <span class="hljs-string">'failed'</span>;
+        }
+    }
+
+    <span class="hljs-keyword">return</span> <span class="hljs-string">'stable'</span>;
+};</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
