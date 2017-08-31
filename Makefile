@@ -1,8 +1,8 @@
-litsource = slang.js slang_parse.js slang_vocab.js slang_objects.js slang_concurrency.js
+litsource = slang.js slang_parse.js slang_vocab.js slang_objects.js slang_concurrency.js slang_nondet.js slang_fd.js slang_error.js
 libsource = slang_later.js
 md_files = $(patsubst %.js,%.js.md,$(litsource))
 docco_files = $(patsubst %.js,docs/%.html,$(litsource))
-timestamp = "21 Feb 2017 - 3 Mar 2017"
+timestamp = "21 Feb 2017 - 26 Apr 2017"
 
 all : slang_all.js slang.js.pdf $(md_files) $(docco_files)
 
@@ -24,7 +24,7 @@ slang.js.pdf: $(md_files)
 		   -M author="Srikumar K. S." \
 		   -M title="The No Spoon Series : Building Slang" \
 		   -M date=$(timestamp) \
-		   -t latex -f markdown $(md_files) --latex-engine=xelatex -o slang.js.pdf
+		   -t latex -V geometry:margin=1in -f markdown $(md_files) --latex-engine=xelatex -o slang.js.pdf
 
 docs/slang.html: $(litsource)
 	docco $(litsource)
