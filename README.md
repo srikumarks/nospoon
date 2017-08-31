@@ -18,7 +18,8 @@ for it.
 
 2. If you like to have a single PDF to read, see [slang.js.pdf](slang.js.pdf).
 
-3. Docco docs for slang are also available in the `docs/` folder.
+3. Docco docs for slang are also available in the `docs/` folder. To view
+   them online, go to https://imaginea.github.io/nospoon/
 
 ## FAQ on using Javascript
 
