@@ -1,4 +1,4 @@
-litsource = slang.js slang_parse.js slang_vocab.js slang_objects.js slang_concurrency.js slang_nondet.js slang_fd.js slang_error.js
+litsource = slang.js slang_parse.js slang_meta.js slang_vocab.js slang_objects.js slang_concurrency.js slang_nondet.js slang_fd.js slang_error.js
 libsource = slang_later.js
 md_files = $(patsubst %.js,%.js.md,$(litsource))
 docco_files = $(patsubst %.js,docs/%.html,$(litsource))
