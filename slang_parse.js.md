@@ -161,10 +161,11 @@ Kill prefix spaces.
 ```
 Check for number.
 ```js
-        let n = parseFloat(program);
-        if (!isNaN(n)) {
+        let nexpr = program.match(glyph);
+        let n = +nexpr;
+        if (nexpr !== null && !isNaN(n)) {
             result.push(number(n));
-            program = program.replace(glyph, '');
+            program = program.substring(nexpr[0].length);
             continue;
         }
 
