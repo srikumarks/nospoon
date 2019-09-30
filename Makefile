@@ -34,7 +34,7 @@ slang.js.pdf: $(md_files)
 		   -M author="Srikumar K. S." \
 		   -M title="The No Spoon Series : Building Slang" \
 		   -M date=$(timestamp) \
-		   -t latex -V geometry:margin=1in -f markdown $(md_files) --latex-engine=xelatex -o slang.js.pdf
+		   -t latex -V geometry:margin=1in -f markdown $(md_files) --pdf-engine=xelatex -o slang.js.pdf
 
 docs/slang.html: $(litsource)
 	docco $(litsource)
