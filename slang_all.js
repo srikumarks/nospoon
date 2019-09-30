@@ -616,12 +616,13 @@ tests.distance3 = function (stack) {
 
 stddefs(function (env) {
     define(env, 'defun', prim(function (env, stack) {
-        let sym = pop(stack), program = pop(stack);
+        let sym = pop(stack), program = pop(stack), p = null;
         console.assert(sym.t === 'symbol');
         console.assert(program.t === 'block');
-        define(env, sym.v, prim(function (env, stack) {
+        define(env, sym.v, p = prim(function (env, stack) {
             return run(env, program.v, 0, stack);
         }));
+        p.block = program;
         return stack;
     }));
 });
@@ -1513,10 +1514,11 @@ let parse_slang = function (program) {
         }
 
         // Check for number.
-        let n = parseFloat(program);
-        if (!isNaN(n)) {
+        let nexpr = program.match(glyph);
+        let n = +nexpr;
+        if (nexpr !== null && !isNaN(n)) {
             result.push(number(n));
-            program = program.replace(glyph, '');
+            program = program.substring(nexpr[0].length);
             continue;
         }
 
@@ -1644,6 +1646,235 @@ stddefs(function (env) {
     define(env, ";", lookup(env, symbol('drop')));
 });
 
+
+// # Reflection and meta programming
+// **Date**: 4 September 2019
+
+// Requires slang.js
+"use strict";
+
+// Thus far, we can write programs using "words" that perform some operations on
+// values on a stack. We can't yet write programs that can look at programs and
+// construct other programs from data. For that meta capability, we need to
+// implement a few features that generally go by the term "reflection" - as in
+// the program's ability to look at itself.
+
+// To begin with, we need some low level things that can produce values that
+// make up programs - numbers, strings, symbols, words and blocks.
+stddefs(function (env) {
+    // Strings are a common intermediate representation for communicating
+    // with humans. They're often needed in metaprogramming either in the
+    // form of symbols or for their concatenative properties. So a word
+    // to turn values into strings is broadly useful.
+    //
+    // `format` will take the top element on the stack, turn it into a
+    // string value and push the string on the stack.
+    define(env, 'format', prim(function (env, stack) {
+        let val = pop(stack);
+        return push(stack, string(val.v.toString()));
+    }));
+
+    // `concat` is for concatenating the top two strings on the stack.
+    // You can repeatedly apply concat to concat multiple strings.
+    define(env, 'concat', prim(function (env, stack) {
+        let second = pop(stack), first = pop(stack);
+        console.assert(first.t === 'string' && second.t === 'string');
+        return push(stack, string(first.v + second.v));
+    }));
+
+    // Going the other way given a string is needed in cases where
+    // we're constructing new words with derived structural properties
+    // like namespace prefixes or package names, for example. To do
+    // that, we need the ability to take a string and turn it into
+    // a symbol that can be used for logical purposes.
+    //
+    // `symbol` will turn the top-of-stack string value into a symbol.
+    define(env, 'symbol', prim(function (env, stack) {
+        let val = pop(stack);
+        console.assert(val.t === 'string');
+        return push(stack, symbol(val.v));
+    }));
+
+    // Our definition of a "word" is something that is interpreted as a
+    // an operation on the stack. We've defined primitive words and also
+    // introduced `define` as a means to add new words to the program's
+    // vocabulary. However, a program thus far cannot really store a
+    // word on the stack because the interpreter will immediately execute
+    // the program it refers to instead of pushing the word on the stack.
+    // 
+    // The purpose of `word` is to take the symbol or string on the top of
+    // the stack, make a word of it, and store it on the stack. That way,
+    // further operators can actually work on the word. In particular, we
+    // need this facility to put together a bunch of words into a
+    // programmatically constructed block.
+    define(env, 'word', prim(function (env, stack) {
+        let val = pop(stack);
+        console.assert(val.t === 'string' || val.t === 'symbol');
+        return push(stack, word(val.v));
+    }));
+
+    // With the ability to store raw words on the stack, we can now
+    // expose what we've had as an internal facility - the ability to
+    // lookup the meaning of a word from the environment.
+    //
+    // `lookup` takes the top word from the stack, finds out the block
+    // or value it refers to and pushes it on the stack. The effect of 
+    // this is that you can use `word lookup` as a phrase to lookup the
+    // definition of a symbol.
+    define(env, 'lookup', prim(function (env, stack) {
+        let w = pop(stack);
+        console.assert(w.t === 'word' || w.t === 'symbol' || w.t === 'string');
+        let v = lookup(env, word(w.v));
+        let b = (v.t === 'prim' ? v.block : v);
+        return push(stack, b);
+    }));
+
+    // The process of reflection isn't really complete without the ability
+    // to tell, at runtime, the type of a thing we're examining. 
+    //
+    // So the `typeof` word examines the top of stack and pushes a string
+    // describing its type.
+    //
+    // This doesn't consume the value from the stack, but just places
+    // its type on the stack additionally. Note that this implementation
+    // is non-ideal since it couples the internal identifiers used for
+    // the types into the API for the programmer.
+    define(env, 'typeof', prim(function (env, stack) {
+        let val = topi(stack, 0);
+        return push(stack, string(val.t));
+    }));
+
+    // We'll need to do some stack manipulation for meta programming and it is
+    // useful to expand our minimal set of stack manipulation operators (we've so
+    // far as `dup` and `drop`) with `swap` and `peek`.
+    //
+    // `swap` exchanges the top two stack items.
+    define(env, 'swap', prim(function (env, stack) {
+        let second = pop(stack), first = pop(stack);
+        push(stack, second);
+        return push(stack, first);
+    }));
+
+    // `over` is like dup, but duplicates the next-to-top item
+    // on the stack.
+    define(env, 'over', prim(function (env, stack) {
+        let e0 = pop(stack), e1 = pop(stack);
+        push(stack, e1);
+        push(stack, e0);
+        return push(stack, e1);
+    }));
+
+    // `n rot` will pull n-deep item on the stack on top and
+    // shift the rest down.
+    define(env, 'rot', prim(function (env, stack) {
+        let n = pop(stack);
+        console.assert(n.t === 'number');
+        console.assert(n.v >= 0 && n.v < depth(stack));
+        let val = topi(stack, n.v);
+        stack.splice(depth(stack) - n.v - 1, 1);
+        return push(stack, val);
+    }));
+
+    // Thus far, we've only been able to make a block directly in the
+    // programs code sequence. Our programs have themselves not been able
+    // to create blocks with specific code content, which is the point
+    // of meta programming facilities. So we need to introduce a `block`
+    // operator that takes "data" from the stack and turns it into a block.
+    //
+    // There are many design options for such a block. We'll choose a
+    // simple one where the contents of the block are delimited on the
+    // stack by a pair of symbols, so we can write :{ ... :} block to
+    // turn the preceding sequence of items placed on the stack into
+    // a block. 
+    //
+    // The main point to note is that whatever occurs between the symbols
+    // :{ and :} are all **evaluated**, unlike the case of [ ... ] where
+    // the items are just **collected** and made into a block and the block
+    // is pushed on to the stack. So [ ... ] is a "literal" block.
+    const matching_delimiter = { ')' : '(', ']' : '[', '}' : '{' };
+
+    define(env, 'block', prim(function (env, stack) {
+        let delimiter = pop(stack);
+        console.assert(delimiter.t === 'symbol');
+
+        let beginning = matching_delimiter[delimiter.v];
+        if (!beginning) { beginning = delimiter.v; }
+
+        let terms = [];
+        do {
+            let term = pop(stack);
+            if (term.t === 'symbol' && term.v === beginning) {
+                /* We've reached the beginning of the block. */
+                break;
+            }
+            terms.unshift(term);
+        } while (stack.length > 0);
+
+        // Note that the block will also implicitly end when we reach
+        // the stack's bottom.
+        return push(stack, block(terms));
+    }));
+
+    // While the delimiter based block calculation is handy, it is also useful
+    // to be able to make small blocks without resorting to delimiters, especially
+    // if we want to be able to calculate with stack contents without the delimiter
+    // standing in the way. For this, we add a `n blockn` that collects the top N
+    // elements from the stack and puts them into a block.
+    define(env, 'blockn', prim(function (env, stack) {
+        let n = pop(stack), b = pop(stack);
+        console.assert(n.t === 'number');
+        console.assert(b.t === 'block');
+        console.assert(n.v >= 0 && n.v < depth(stack));
+        let items = [];
+        for (let i = 0; i < n.v; ++i) {
+            items.unshift(pop(stack));
+        }
+        return push(stack, block(items));
+    }));
+
+    // Ok we can make blocks, but how do we get to examine their contents?
+    // One way is to make a reflection `vocab` for blocks, which is a good
+    // idea. Here, we'll add something a bit more mundane - `deblock` will
+    // explode the entities in the block on to the stack. It won't place
+    // any delimiters ... and that's for good reason. You may want to
+    // combine a block's contents with other content as well and delimiters
+    // may stand in the way.
+    define(env, 'deblock', prim(function (env, stack) {
+        let b = pop(stack);
+        console.assert(b.t === 'block');
+        for (let i = 0; i < b.v.length; ++i) {
+            push(stack, b.v[i]);
+        }
+        return stack;
+    }));
+});
+
+// With the above defined words 'symbol', 'word' and 'block', we have
+// enough of a mechanism to programmatically create functions. As an 
+// example, lets create a defining function that will modify the definition
+// of a given word that's supposed to be a two-argument function, to 
+// working on the arguments swapped.
+
+tests.redef = function () {
+    let program = parse_slang(`
+        [ [w] args
+          :{
+            :swap word
+            w lookup deblock
+          :}
+          block w
+        ] :swapped defun
+
+        [-] :minus defun
+        "before" print
+        2 3 minus print
+        :minus swapped defun
+        "after" print
+        2 3 minus print
+    `);
+
+    return run(test_env(), program, 0, []);
+};
 
 // # Vocabularies
 // **Date**: 15 March 2017
@@ -2591,15 +2822,16 @@ stddefs(function (env) {
     }));
 
     define(env, 'defun', prim(function (env, stack) {
-        let sym = pop(stack), block = pop(stack);
+        let sym = pop(stack), block = pop(stack), p = null;
         console.assert(sym.t === 'symbol');
         if (block.t === 'prim') {
             define(env, sym.v, block);
         } else {
             console.assert(block.t === 'block');
-            define(env, sym.v, prim(function (env, stack, callback) {
+            define(env, sym.v, p = prim(function (env, stack, callback) {
                 return do_block(env, stack, block, callback);
             }));
+            p.block = block;
         }
         return stack;
     }));
@@ -3424,7 +3656,208 @@ stddefs(function (env) {
 });
 
 
-// # Non-deterministic programming
+// # Coreferences
+// **Date**: 4 September 2019
+
+// Requires slang.js
+"use strict";
+
+// We're now going to do something fun that you don't usually
+// find in many programming languages - a feature we call
+// "coreferences" and something we do fantastically well 
+// in natural language when we refer to things based on
+// context without having to invent names for them all the
+// time.
+
+// For example, in natural language, we don't say something like
+//
+// > Let X be Gandhi's wife. X's name was Kasturba. Let D be the
+// > event named "Dandi March". X marched in D.
+//
+// Instead, we just say -
+//
+// > Gandhi's wife's name was Kasturba. She marched in the Dandi March.
+//
+// where we easily associate "She" with "Kasturba" by context.
+
+// To mimic that, what we're going to do is to introduce a primitive called
+// "the" which will look at its next word and will result in the most recent
+// computation by that word being placed on the stack. This is pretty much the
+// first time we're breaking the postfix rule.
+
+// We introduce a "compiler" type of primitive. This primitive, once
+// encountered, is repeatedly given the following words one by one by the
+// interpreter loop until the primitive returns false. The primitive's
+// implementation can process the words one by one as a state machine until it
+// chooses to exit the "compilation mode".
+let compiler = function (fn) { return { t: 'compiler', v: fn }; };
+
+// We'll use a special known symbol as the key into the current
+// environment to keep track of recent computation results.
+const the = Symbol('the');
+
+// We store the recent computation in the current environment under 
+// the `the` symbol above as a map from the name of the word that 
+// did the recent computation, to the result top-of-stack.
+//
+// `get_recent` fetches the recent computation identified in the
+// current environment by `word` and `store_recent` stores a recently
+// computed value in the same. Note that we do this only with the
+// current environment.
+let get_recent = function (env, word) {
+    console.assert(word.t === 'word' || word.t === 'symbol');
+    let cenv = current_bindings(env);
+    let the_recents = (cenv[the] || (cenv[the] = {}));
+    return the_recents[word.v];
+};
+
+let store_recent = function (env, word, value) {
+    console.assert(word.t === 'word' || word.t === 'symbol');
+    let cenv = current_bindings(env);
+    let the_recents = (cenv[the] || (cenv[the] = {}));
+    return (the_recents[word.v] = value);
+};
+
+// This "new" run implementation is pretty much the same as that encountered in
+// the concurrency module. We want to implement support for the new 'compiler'
+// primitive.
+run = function (env, program, pc, stack, callback) {
+    if (!stack.process) {
+        stack.process = process(env, block(program));
+    }
+
+    for (; pc < program.length; ++pc) {
+        let instr = program[pc];
+        let sym = null;
+ 
+        if (instr.t === 'word') {
+            let deref = lookup(env, instr);
+            if (!deref) {
+                console.error('Undefined word "' + instr.v + '" at instruction ' + pc);
+            }
+            sym = instr;
+            instr = deref;
+        }
+
+        switch (instr.t) {
+            case 'compiler':
+                // Compiler instructions always act synchronously.
+                for (++pc; pc < program.length; ++pc) {
+                    push(stack, program[pc]);
+                    if (!instr.v(env, stack)) { break; }
+                }
+                break;
+
+            case 'prim':
+                // Whenever we perform an operation based on a defined word,
+                // we take the result off top of the stack and store it as
+                // the result of the word's performance. This is not always
+                // the case, though and I'm not sure how to deal with the
+                // more general case where a word may do anything to the
+                // stack - as with, say, `dup` and `swap` - but the
+                // top-of-stack rule is useful enough I think for more usual
+                // operations that leave the result on the stack.
+                if (callback && instr.v.length === 3) {
+                    return apply(env, instr, stack, function (stack) {
+                        if (sym) {
+                            store_recent(env, sym, topi(stack, 0));
+                        }
+                        return run(env, program, pc+1, stack, callback);
+                    });
+                } else {
+                    stack = apply(env, instr, stack);
+                    if (sym) {
+                        store_recent(env, sym, topi(stack, 0));
+                    }
+                    break;
+                }
+
+            case 'block':
+                let bound_block = block(instr.v);
+                bound_block.bindings = instr.bindings || copy_bindings_for_block(bound_block, env, {});
+                push(stack, bound_block);
+                break;
+
+            default:
+                push(stack, instr);
+                break;
+        }
+    }
+
+    if (callback) {
+        return later(callback, stack);
+    }
+
+    return stack;
+}
+
+
+
+stddefs(function (env) {
+    // The basic idea behind coreferences is to be able to
+    // reference a recently computed result. The way we do
+    // that is to use the form `the word` which will result
+    // in the most recent computation done by the operation
+    // the `word` refers to being fetched and placed on
+    // the stack. Since the implementation of `the` will
+    // have to refer to the **following** word, i.e. we're
+    // breaking postfix notation here, we make it a "compiler"
+    // type which enters its own capture loop, grabs the
+    // following word, looks it up in the recent computations
+    // and places the result on the stack.
+    //
+    // The lookup is done only in the current environment without
+    // following the environment chain. This is because it will
+    // break encapsulation to permit `the` in an environment to
+    // refer to a computation done in the enclosing environment
+    // by name.
+    //
+    // Another thing to note is that these recent values won't
+    // be released for the garbage collector to collect until
+    // the end of the environment in which they were calculated.
+    define(env, 'the', compiler(function (env, stack) {
+        let w = pop(stack);
+        console.assert(w.t === 'word');
+        let val = get_recent(env, w);
+        if (val) {
+            push(stack, val);
+        } else {
+            console.error("ERROR: No such coreference " + w.v);
+            push(stack, undefined);
+        }
+
+        /* We only consume one word following a `the`. */
+        return false;
+    }));
+
+    // While at it, it is also useful to modify the behaviours of
+    // the `get`, `send`, `put` words to store their values under the
+    // key they access instead of those words themselves.
+    function with_recent_capture_by_key(word_str) {
+        let curr_impl = lookup(env, word(word_str));
+        if (!curr_impl) { return; }
+        console.assert(curr_impl.t === 'prim');
+        let curr_fn = curr_impl.v;
+        curr_impl.v = function (env, stack, callback) {
+            let key = topi(stack, 0);
+            console.assert(key.t === 'symbol');
+            if (callback && curr_fn.length === 3) {
+                curr_fn(env, stack, function (stack) {
+                    store_recent(env, key, topi(stack, 0));
+                    callback(stack);
+                });
+            } else {
+                stack = curr_fn(env, stack);
+                store_recent(env, key, topi(stack, 0));
+                if (callback) { callback(stack); }
+            }
+            return stack;
+        };
+    }
+
+    ['get', 'put', 'send'].forEach(with_recent_capture_by_key);
+
+});// # Non-deterministic programming
 
 // **Date**: 18 Apri 2017
 
@@ -4272,6 +4705,30 @@ let propagate = function (variables) {
 // TODO: Implement Common Lisp-like error handling mechanism in Slang that is
 // also process aware.
 
+// # Exports
+
+// We export the few critical functions we need to run slang.
+// `env` for making environments,
+// `parse` for parsing slang expressions,
+// `run` for running slang programs.
+try {
+    module.exports = {
+        run : run,
+        parse: parse_slang,
+        env: (base) => { return load_stdlib(mk_env(base)); },
+        define: define,
+        prim: prim,
+        word: word,
+        number: number,
+        string: string,
+        symbol: symbol,
+        push: push,
+        pop: pop,
+        topi: topi,
+        depth: depth
+    };
+} catch (e) {
+}
 later = (function () {
     "use strict";
 

@@ -35,8 +35,18 @@
                 </a>
               
                 
+                <a class="source" href="slang_exports.html">
+                  slang_exports.js
+                </a>
+              
+                
                 <a class="source" href="slang_fd.html">
                   slang_fd.js
+                </a>
+              
+                
+                <a class="source" href="slang_meta.html">
+                  slang_meta.js
                 </a>
               
                 
@@ -52,6 +62,11 @@
                 
                 <a class="source" href="slang_parse.html">
                   slang_parse.js
+                </a>
+              
+                
+                <a class="source" href="slang_the.html">
+                  slang_the.js
                 </a>
               
                 
@@ -325,10 +340,11 @@ this flattened out form, then we’re done with our parser.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">let</span> n = <span class="hljs-built_in">parseFloat</span>(program);
-        <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">isNaN</span>(n)) {
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">let</span> nexpr = program.match(glyph);
+        <span class="hljs-keyword">let</span> n = +nexpr;
+        <span class="hljs-keyword">if</span> (nexpr !== <span class="hljs-literal">null</span> &amp;&amp; !<span class="hljs-built_in">isNaN</span>(n)) {
             result.push(number(n));
-            program = program.replace(glyph, <span class="hljs-string">''</span>);
+            program = program.substring(nexpr[<span class="hljs-number">0</span>].length);
             <span class="hljs-keyword">continue</span>;
         }</pre></div></div>
             

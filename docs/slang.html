@@ -35,8 +35,18 @@
                 </a>
               
                 
+                <a class="source" href="slang_exports.html">
+                  slang_exports.js
+                </a>
+              
+                
                 <a class="source" href="slang_fd.html">
                   slang_fd.js
+                </a>
+              
+                
+                <a class="source" href="slang_meta.html">
+                  slang_meta.js
                 </a>
               
                 
@@ -52,6 +62,11 @@
                 
                 <a class="source" href="slang_parse.html">
                   slang_parse.js
+                </a>
+              
+                
+                <a class="source" href="slang_the.html">
+                  slang_the.js
                 </a>
               
                 
@@ -1550,12 +1565,13 @@ no longer treat the block as a value. The only thing we can do with a
             <div class="content"><div class='highlight'><pre>
 stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
     define(env, <span class="hljs-string">'defun'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> sym = pop(stack), program = pop(stack);
+        <span class="hljs-keyword">let</span> sym = pop(stack), program = pop(stack), p = <span class="hljs-literal">null</span>;
         <span class="hljs-built_in">console</span>.assert(sym.t === <span class="hljs-string">'symbol'</span>);
         <span class="hljs-built_in">console</span>.assert(program.t === <span class="hljs-string">'block'</span>);
-        define(env, sym.v, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        define(env, sym.v, p = prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
             <span class="hljs-keyword">return</span> run(env, program.v, <span class="hljs-number">0</span>, stack);
         }));
+        p.block = program;
         <span class="hljs-keyword">return</span> stack;
     }));
 });</pre></div></div>

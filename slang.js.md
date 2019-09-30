@@ -701,12 +701,13 @@ no longer treat the block as a value. The only thing we can do with a
 ```js
 stddefs(function (env) {
     define(env, 'defun', prim(function (env, stack) {
-        let sym = pop(stack), program = pop(stack);
+        let sym = pop(stack), program = pop(stack), p = null;
         console.assert(sym.t === 'symbol');
         console.assert(program.t === 'block');
-        define(env, sym.v, prim(function (env, stack) {
+        define(env, sym.v, p = prim(function (env, stack) {
             return run(env, program.v, 0, stack);
         }));
+        p.block = program;
         return stack;
     }));
 });

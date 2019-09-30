@@ -474,15 +474,16 @@ stddefs(function (env) {
     }));
 
     define(env, 'defun', prim(function (env, stack) {
-        let sym = pop(stack), block = pop(stack);
+        let sym = pop(stack), block = pop(stack), p = null;
         console.assert(sym.t === 'symbol');
         if (block.t === 'prim') {
             define(env, sym.v, block);
         } else {
             console.assert(block.t === 'block');
-            define(env, sym.v, prim(function (env, stack, callback) {
+            define(env, sym.v, p = prim(function (env, stack, callback) {
                 return do_block(env, stack, block, callback);
             }));
+            p.block = block;
         }
         return stack;
     }));

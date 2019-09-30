@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Coreferences</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="slang.html">
+                  slang.js
+                </a>
+              
+                
+                <a class="source" href="slang_concurrency.html">
+                  slang_concurrency.js
+                </a>
+              
+                
+                <a class="source" href="slang_error.html">
+                  slang_error.js
+                </a>
+              
+                
+                <a class="source" href="slang_exports.html">
+                  slang_exports.js
+                </a>
+              
+                
+                <a class="source" href="slang_fd.html">
+                  slang_fd.js
+                </a>
+              
+                
+                <a class="source" href="slang_meta.html">
+                  slang_meta.js
+                </a>
+              
+                
+                <a class="source" href="slang_nondet.html">
+                  slang_nondet.js
+                </a>
+              
+                
+                <a class="source" href="slang_objects.html">
+                  slang_objects.js
+                </a>
+              
+                
+                <a class="source" href="slang_parse.html">
+                  slang_parse.js
+                </a>
+              
+                
+                <a class="source" href="slang_the.html">
+                  slang_the.js
+                </a>
+              
+                
+                <a class="source" href="slang_vocab.html">
+                  slang_vocab.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <h1 id="coreferences">Coreferences</h1>
+<p><strong>Date</strong>: 4 September 2019</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Requires slang.js</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-meta">"use strict"</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>We’re now going to do something fun that you don’t usually
+find in many programming languages - a feature we call
+“coreferences” and something we do fantastically well 
+in natural language when we refer to things based on
+context without having to invent names for them all the
+time.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>For example, in natural language, we don’t say something like</p>
+<blockquote>
+<p>Let X be Gandhi’s wife. X’s name was Kasturba. Let D be the
+event named “Dandi March”. X marched in D.</p>
+</blockquote>
+<p>Instead, we just say -</p>
+<blockquote>
+<p>Gandhi’s wife’s name was Kasturba. She marched in the Dandi March.</p>
+</blockquote>
+<p>where we easily associate “She” with “Kasturba” by context.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>To mimic that, what we’re going to do is to introduce a primitive called
+“the” which will look at its next word and will result in the most recent
+computation by that word being placed on the stack. This is pretty much the
+first time we’re breaking the postfix rule.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>We introduce a “compiler” type of primitive. This primitive, once
+encountered, is repeatedly given the following words one by one by the
+interpreter loop until the primitive returns false. The primitive’s
+implementation can process the words one by one as a state machine until it
+chooses to exit the “compilation mode”.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> compiler = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">fn</span>) </span>{ <span class="hljs-keyword">return</span> { <span class="hljs-attr">t</span>: <span class="hljs-string">'compiler'</span>, <span class="hljs-attr">v</span>: fn }; };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>We’ll use a special known symbol as the key into the current
+environment to keep track of recent computation results.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">const</span> the = <span class="hljs-built_in">Symbol</span>(<span class="hljs-string">'the'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>We store the recent computation in the current environment under 
+the <code>the</code> symbol above as a map from the name of the word that 
+did the recent computation, to the result top-of-stack.</p>
+<p><code>get_recent</code> fetches the recent computation identified in the
+current environment by <code>word</code> and <code>store_recent</code> stores a recently
+computed value in the same. Note that we do this only with the
+current environment.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> get_recent = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, word</span>) </span>{
+    <span class="hljs-built_in">console</span>.assert(word.t === <span class="hljs-string">'word'</span> || word.t === <span class="hljs-string">'symbol'</span>);
+    <span class="hljs-keyword">let</span> cenv = current_bindings(env);
+    <span class="hljs-keyword">let</span> the_recents = (cenv[the] || (cenv[the] = {}));
+    <span class="hljs-keyword">return</span> the_recents[word.v];
+};
+
+<span class="hljs-keyword">let</span> store_recent = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, word, value</span>) </span>{
+    <span class="hljs-built_in">console</span>.assert(word.t === <span class="hljs-string">'word'</span> || word.t === <span class="hljs-string">'symbol'</span>);
+    <span class="hljs-keyword">let</span> cenv = current_bindings(env);
+    <span class="hljs-keyword">let</span> the_recents = (cenv[the] || (cenv[the] = {}));
+    <span class="hljs-keyword">return</span> (the_recents[word.v] = value);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>This “new” run implementation is pretty much the same as that encountered in
+the concurrency module. We want to implement support for the new ‘compiler’
+primitive.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>run = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack, callback</span>) </span>{
+    <span class="hljs-keyword">if</span> (!stack.process) {
+        stack.process = process(env, block(program));
+    }
+
+    <span class="hljs-keyword">for</span> (; pc &lt; program.length; ++pc) {
+        <span class="hljs-keyword">let</span> instr = program[pc];
+        <span class="hljs-keyword">let</span> sym = <span class="hljs-literal">null</span>;
+ 
+        <span class="hljs-keyword">if</span> (instr.t === <span class="hljs-string">'word'</span>) {
+            <span class="hljs-keyword">let</span> deref = lookup(env, instr);
+            <span class="hljs-keyword">if</span> (!deref) {
+                <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Undefined word "'</span> + instr.v + <span class="hljs-string">'" at instruction '</span> + pc);
+            }
+            sym = instr;
+            instr = deref;
+        }
+
+        <span class="hljs-keyword">switch</span> (instr.t) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'compiler'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>Compiler instructions always act synchronously.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">for</span> (++pc; pc &lt; program.length; ++pc) {
+                    push(stack, program[pc]);
+                    <span class="hljs-keyword">if</span> (!instr.v(env, stack)) { <span class="hljs-keyword">break</span>; }
+                }
+                <span class="hljs-keyword">break</span>;
+
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Whenever we perform an operation based on a defined word,
+we take the result off top of the stack and store it as
+the result of the word’s performance. This is not always
+the case, though and I’m not sure how to deal with the
+more general case where a word may do anything to the
+stack - as with, say, <code>dup</code> and <code>swap</code> - but the
+top-of-stack rule is useful enough I think for more usual
+operations that leave the result on the stack.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">if</span> (callback &amp;&amp; instr.v.length === <span class="hljs-number">3</span>) {
+                    <span class="hljs-keyword">return</span> apply(env, instr, stack, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+                        <span class="hljs-keyword">if</span> (sym) {
+                            store_recent(env, sym, topi(stack, <span class="hljs-number">0</span>));
+                        }
+                        <span class="hljs-keyword">return</span> run(env, program, pc+<span class="hljs-number">1</span>, stack, callback);
+                    });
+                } <span class="hljs-keyword">else</span> {
+                    stack = apply(env, instr, stack);
+                    <span class="hljs-keyword">if</span> (sym) {
+                        store_recent(env, sym, topi(stack, <span class="hljs-number">0</span>));
+                    }
+                    <span class="hljs-keyword">break</span>;
+                }
+
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'block'</span>:
+                <span class="hljs-keyword">let</span> bound_block = block(instr.v);
+                bound_block.bindings = instr.bindings || copy_bindings_for_block(bound_block, env, {});
+                push(stack, bound_block);
+                <span class="hljs-keyword">break</span>;
+
+            <span class="hljs-keyword">default</span>:
+                push(stack, instr);
+                <span class="hljs-keyword">break</span>;
+        }
+    }
+
+    <span class="hljs-keyword">if</span> (callback) {
+        <span class="hljs-keyword">return</span> later(callback, stack);
+    }
+
+    <span class="hljs-keyword">return</span> stack;
+}
+
+
+
+stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>The basic idea behind coreferences is to be able to
+reference a recently computed result. The way we do
+that is to use the form <code>the word</code> which will result
+in the most recent computation done by the operation
+the <code>word</code> refers to being fetched and placed on
+the stack. Since the implementation of <code>the</code> will
+have to refer to the <strong>following</strong> word, i.e. we’re
+breaking postfix notation here, we make it a “compiler”
+type which enters its own capture loop, grabs the
+following word, looks it up in the recent computations
+and places the result on the stack.</p>
+<p>The lookup is done only in the current environment without
+following the environment chain. This is because it will
+break encapsulation to permit <code>the</code> in an environment to
+refer to a computation done in the enclosing environment
+by name.</p>
+<p>Another thing to note is that these recent values won’t
+be released for the garbage collector to collect until
+the end of the environment in which they were calculated.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'the'</span>, compiler(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+        <span class="hljs-keyword">let</span> w = pop(stack);
+        <span class="hljs-built_in">console</span>.assert(w.t === <span class="hljs-string">'word'</span>);
+        <span class="hljs-keyword">let</span> val = get_recent(env, w);
+        <span class="hljs-keyword">if</span> (val) {
+            push(stack, val);
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-built_in">console</span>.error(<span class="hljs-string">"ERROR: No such coreference "</span> + w.v);
+            push(stack, <span class="hljs-literal">undefined</span>);
+        }
+
+        <span class="hljs-comment">/* We only consume one word following a `the`. */</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>While at it, it is also useful to modify the behaviours of
+the <code>get</code>, <code>send</code>, <code>put</code> words to store their values under the
+key they access instead of those words themselves.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">with_recent_capture_by_key</span>(<span class="hljs-params">word_str</span>) </span>{
+        <span class="hljs-keyword">let</span> curr_impl = lookup(env, word(word_str));
+        <span class="hljs-keyword">if</span> (!curr_impl) { <span class="hljs-keyword">return</span>; }
+        <span class="hljs-built_in">console</span>.assert(curr_impl.t === <span class="hljs-string">'prim'</span>);
+        <span class="hljs-keyword">let</span> curr_fn = curr_impl.v;
+        curr_impl.v = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
+            <span class="hljs-keyword">let</span> key = topi(stack, <span class="hljs-number">0</span>);
+            <span class="hljs-built_in">console</span>.assert(key.t === <span class="hljs-string">'symbol'</span>);
+            <span class="hljs-keyword">if</span> (callback &amp;&amp; curr_fn.length === <span class="hljs-number">3</span>) {
+                curr_fn(env, stack, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
+                    store_recent(env, key, topi(stack, <span class="hljs-number">0</span>));
+                    callback(stack);
+                });
+            } <span class="hljs-keyword">else</span> {
+                stack = curr_fn(env, stack);
+                store_recent(env, key, topi(stack, <span class="hljs-number">0</span>));
+                <span class="hljs-keyword">if</span> (callback) { callback(stack); }
+            }
+            <span class="hljs-keyword">return</span> stack;
+        };
+    }
+
+    [<span class="hljs-string">'get'</span>, <span class="hljs-string">'put'</span>, <span class="hljs-string">'send'</span>].forEach(with_recent_capture_by_key);
+
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
