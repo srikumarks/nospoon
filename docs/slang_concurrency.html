@@ -86,8 +86,8 @@
         <li id="section-1">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-1">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-1">&#x00a7;</a>
               </div>
               
             </div>
@@ -98,8 +98,8 @@
         <li id="section-2">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-2">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-2">&#x00a7;</a>
               </div>
               <h1 id="concurrency">Concurrency</h1>
 
@@ -111,8 +111,8 @@
         <li id="section-3">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-3">&#x00a7;</a>
               </div>
               <p><strong>Date</strong>: 3 April 2017</p>
 
@@ -124,14 +124,14 @@
         <li id="section-4">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-4">&#x00a7;</a>
               </div>
               <p>Requires slang.js, slang_vocab.js, slang_objects.js.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre><span class="hljs-meta">"use strict"</span>;</pre></div></div>
+            <div class="content"><div class='highlight'><pre><span class="hljs-meta">&quot;use strict&quot;</span>;</pre></div></div>
             
         </li>
         
@@ -139,8 +139,8 @@
         <li id="section-5">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-5">&#x00a7;</a>
               </div>
               <p>Most programming in today’s environment involves concurrency.
 This means at any time, we can have more than one “process” running
@@ -165,10 +165,10 @@ run “concurrent processes”.</p>
         <li id="section-6">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-6">&#x00a7;</a>
               </div>
-              <h2 id="from-sequentiality-to-concurrency-as-beta-abstraction-">From sequentiality to concurrency as “beta abstraction”</h2>
+              <h2 id="from-sequentiality-to-concurrency-as-beta-abstraction">From sequentiality to concurrency as “beta abstraction”</h2>
 
             </div>
             
@@ -178,8 +178,8 @@ run “concurrent processes”.</p>
         <li id="section-7">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-7">&#x00a7;</a>
               </div>
               <p>When looking to model a domain, we can either come up with
 domain concepts top-down from an existing formalism, or try
@@ -202,15 +202,15 @@ used within the body of a function definition.</p>
 <p>Depending on which symbol you pull out, you gain different kinds of
 flexibility. </p>
 <p>If we have a function like this -</p>
-<pre><code class="lang-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">f</span>(<span class="hljs-params">a1,a2,...</span>) </span>{ .... S .... }
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">f</span>(<span class="hljs-params">a1,a2,...</span>) { .... S .... }
 </code></pre>
 <p>then the act of “beta abstracting on <code>S</code>“ is rewriting this function
 as the application of another more abstract function to <code>S</code> - i.e.</p>
-<pre><code class="lang-js">(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">g</span>(<span class="hljs-params">a1,a2,...</span>) </span>{ <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">S</span>) </span>{ .... S .... }; })(S)
+<pre><code class="language-js">(<span class="hljs-keyword">function</span> <span class="hljs-title function_">g</span>(<span class="hljs-params">a1,a2,...</span>) { <span class="hljs-keyword">return</span> <span class="hljs-keyword">function</span> (<span class="hljs-params">S</span>) { .... S .... }; })(a1,a2,...)(S)
 </code></pre>
 <p>Or to keep it simple, you can just work with a function <code>g</code> that is
 the same as <code>f</code>, but with an additional argument <code>S</code>.</p>
-<pre><code class="lang-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">g</span>(<span class="hljs-params">a1,a2,...,S</span>) </span>{ .... S .... }
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">g</span>(<span class="hljs-params">a1,a2,...,S</span>) { .... S .... }
 </code></pre>
 <p>The function <code>g</code> is considered to be more abstract than the function <code>f</code>
 because we can change what <code>S</code> is to achieve different ends.</p>
@@ -219,16 +219,16 @@ standing for certain types of “values”, they do not allow certain
 “reserved” symbols to be passed as arguments like this. However,
 for our purpose, we’ll pretend that they do.</p>
 <p>If we look at out interpreter, we have a rough structure as follows -</p>
-<pre><code class="lang-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">run</span>(<span class="hljs-params">env, program, pc, stack</span>) </span>{
-   <span class="hljs-keyword">for</span> (; pc &lt; program.length; ++pc) {
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">run</span>(<span class="hljs-params">env, program, pc, stack</span>) {
+   <span class="hljs-keyword">for</span> (; pc &lt; program.<span class="hljs-property">length</span>; ++pc) {
      ....
-     switch (instr.t) {
+     <span class="hljs-keyword">switch</span> (instr.<span class="hljs-property">t</span>) {
          ....
      }
    }
 
    ...
-   return stack;
+   <span class="hljs-keyword">return</span> stack;
 }
 </code></pre>
 <p>We can abstract on many symbols, each giving us a different
@@ -256,9 +256,9 @@ I’m giving you as an argument”. That’s a pretty special “function”.</p
 to pass whatever target function to which the <code>run</code> invocation
 must “return to”. So our interpreter loop looks something like
 this -</p>
-<pre><code class="lang-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">run</span>(<span class="hljs-params">env, program, pc, stack, ret</span>) </span>{
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">run</span>(<span class="hljs-params">env, program, pc, stack, ret</span>) {
    ... same same ...
-   ret(stack);
+   <span class="hljs-title function_">ret</span>(stack);
 }
 </code></pre>
 <p>To truly ensure that we benefit from this change though,
@@ -300,8 +300,8 @@ because you’re programming in CPS style quite unnecessarily.</p>
         <li id="section-8">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-8">&#x00a7;</a>
               </div>
               <h2 id="basic-asynchronous-behaviour">Basic asynchronous behaviour</h2>
 
@@ -313,8 +313,8 @@ because you’re programming in CPS style quite unnecessarily.</p>
         <li id="section-9">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-9">&#x00a7;</a>
               </div>
               <p>Before we get to concurrent processes, we’ll support asynchronous
 invocations so that we can at least use slang with Node.JS.</p>
@@ -329,20 +329,20 @@ argument.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-run = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack, callback</span>) </span>{
-    <span class="hljs-keyword">for</span> (; pc &lt; program.length; ++pc) {
+run = <span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack, callback</span>) {
+    <span class="hljs-keyword">for</span> (; pc &lt; program.<span class="hljs-property">length</span>; ++pc) {
         <span class="hljs-keyword">let</span> instr = program[pc];
         
-        <span class="hljs-keyword">if</span> (instr.t === <span class="hljs-string">'word'</span>) {
-            <span class="hljs-keyword">let</span> deref = lookup(env, instr);
+        <span class="hljs-keyword">if</span> (instr.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;word&#x27;</span>) {
+            <span class="hljs-keyword">let</span> deref = <span class="hljs-title function_">lookup</span>(env, instr);
             <span class="hljs-keyword">if</span> (!deref) {
-                <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Undefined word "'</span> + instr.v + <span class="hljs-string">'" at instruction '</span> + pc);
+                <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;Undefined word &quot;&#x27;</span> + instr.<span class="hljs-property">v</span> + <span class="hljs-string">&#x27;&quot; at instruction &#x27;</span> + pc);
             }
             instr = deref;
         }
 
-        <span class="hljs-keyword">switch</span> (instr.t) {
-            <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:</pre></div></div>
+        <span class="hljs-keyword">switch</span> (instr.<span class="hljs-property">t</span>) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;prim&#x27;</span>:</pre></div></div>
             
         </li>
         
@@ -350,8 +350,8 @@ run = <span class="hljs-function"><span class="hljs-keyword">function</span> (<s
         <li id="section-10">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-10">&#x00a7;</a>
               </div>
               <p>We identify a primitive that will complete only
 asynchronously by checking whether its function
@@ -365,19 +365,19 @@ if you do an <code>await</code> within a synchronous
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">if</span> (callback &amp;&amp; instr.v.length === <span class="hljs-number">3</span>) {
-                    <span class="hljs-keyword">return</span> apply(env, instr, stack, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-                        <span class="hljs-keyword">return</span> run(env, program, pc+<span class="hljs-number">1</span>, stack, callback);
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">if</span> (callback &amp;&amp; instr.<span class="hljs-property">v</span>.<span class="hljs-property">length</span> === <span class="hljs-number">3</span>) {
+                    <span class="hljs-keyword">return</span> <span class="hljs-title function_">apply</span>(env, instr, stack, <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+                        <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(env, program, pc+<span class="hljs-number">1</span>, stack, callback);
                     });
                 } <span class="hljs-keyword">else</span> {
-                    stack = apply(env, instr, stack);
+                    stack = <span class="hljs-title function_">apply</span>(env, instr, stack);
                     <span class="hljs-keyword">break</span>;
                 }
 
-            <span class="hljs-keyword">case</span> <span class="hljs-string">'block'</span>:
-                <span class="hljs-keyword">let</span> bound_block = block(instr.v);
-                bound_block.bindings = instr.bindings || copy_bindings(current_bindings(env), {});
-                push(stack, bound_block);
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;block&#x27;</span>:
+                <span class="hljs-keyword">let</span> bound_block = <span class="hljs-title function_">block</span>(instr.<span class="hljs-property">v</span>);
+                bound_block.<span class="hljs-property">bindings</span> = instr.<span class="hljs-property">bindings</span> || <span class="hljs-title function_">copy_bindings</span>(<span class="hljs-title function_">current_bindings</span>(env), {});
+                <span class="hljs-title function_">push</span>(stack, bound_block);
                 <span class="hljs-keyword">break</span>;</pre></div></div>
             
         </li>
@@ -386,15 +386,15 @@ if you do an <code>await</code> within a synchronous
         <li id="section-11">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-11">&#x00a7;</a>
               </div>
               <p>In all other cases we just store the value on the stack.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">default</span>:
-                push(stack, instr);
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-attr">default</span>:
+                <span class="hljs-title function_">push</span>(stack, instr);
                 <span class="hljs-keyword">break</span>;
         }
     }</pre></div></div>
@@ -405,8 +405,8 @@ if you do an <code>await</code> within a synchronous
         <li id="section-12">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-12">&#x00a7;</a>
               </div>
               <p>If the caller is thinking that this the run may operate asynchronously,
 we’ll oblige by calling the supplied callback .. but in the next
@@ -415,7 +415,7 @@ scheduler tick.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">if</span> (callback) {
-        <span class="hljs-keyword">return</span> later(callback, stack);
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, stack);
     }
 
     <span class="hljs-keyword">return</span> stack;
@@ -427,8 +427,8 @@ scheduler tick.</p>
         <li id="section-13">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-13">&#x00a7;</a>
               </div>
               <p>We define <code>later</code> to be a function that will postpone the 
 immediate execution of the zero-argument function passed to it.</p>
@@ -436,8 +436,8 @@ immediate execution of the zero-argument function passed to it.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> later = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">callback, value</span>) </span>{
-    callback &amp;&amp; setTimout(callback, <span class="hljs-number">0</span>, value);
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> later = <span class="hljs-keyword">function</span> (<span class="hljs-params">callback, value</span>) {
+    callback &amp;&amp; <span class="hljs-title function_">setTimout</span>(callback, <span class="hljs-number">0</span>, value);
     <span class="hljs-keyword">return</span> value;
 };</pre></div></div>
             
@@ -447,8 +447,8 @@ immediate execution of the zero-argument function passed to it.</p>
         <li id="section-14">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-14">&#x00a7;</a>
               </div>
               <p>We used a four-argument version of <code>apply</code>. So we need to change its
 implementation to support primitives with callbacks too. We simply
@@ -458,9 +458,9 @@ than it knows about, it will just ignore them.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>apply = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, prim, stack, callback</span>) </span>{
-    <span class="hljs-built_in">console</span>.assert(prim.t === <span class="hljs-string">'prim'</span>);
-    <span class="hljs-keyword">return</span> prim.v(env, stack, callback);
+            <div class="content"><div class='highlight'><pre>apply = <span class="hljs-keyword">function</span> (<span class="hljs-params">env, prim, stack, callback</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(prim.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;prim&#x27;</span>);
+    <span class="hljs-keyword">return</span> prim.<span class="hljs-title function_">v</span>(env, stack, callback);
 };</pre></div></div>
             
         </li>
@@ -469,8 +469,8 @@ than it knows about, it will just ignore them.</p>
         <li id="section-15">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-15">&#x00a7;</a>
               </div>
               <h2 id="cooperative-multi-tasking">Cooperative multi-tasking</h2>
 
@@ -482,8 +482,8 @@ than it knows about, it will just ignore them.</p>
         <li id="section-16">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-16">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-16">&#x00a7;</a>
               </div>
               <p>While the ability to have our interpreter return asynchronously
 is the key step in our single threaded JS environment to enable
@@ -499,8 +499,8 @@ sequences of interpreters.</p>
         <li id="section-17">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-17">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-17">&#x00a7;</a>
               </div>
               <p>We’ll therefore need a way to spawn off such asynchronous processes
 which will not interfere with our spawning process. We’ll add a
@@ -520,8 +520,8 @@ complete synchronously.</p>
         <li id="section-18">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-18">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-18">&#x00a7;</a>
               </div>
               <p>We first introduce a primitive type for processes. The notify
 array is intended to hold a bunch of callbacks to be called
@@ -529,11 +529,11 @@ with the process’s result value once the process finishes.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> process = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, block</span>) </span>{
-    <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'process'</span>, <span class="hljs-attr">v</span>: block, <span class="hljs-attr">state</span>: <span class="hljs-string">'waiting'</span>, <span class="hljs-attr">notify</span>: [], <span class="hljs-attr">env</span>: env};
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> process = <span class="hljs-keyword">function</span> (<span class="hljs-params">env, block</span>) {
+    <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">&#x27;process&#x27;</span>, <span class="hljs-attr">v</span>: block, <span class="hljs-attr">state</span>: <span class="hljs-string">&#x27;waiting&#x27;</span>, <span class="hljs-attr">notify</span>: [], <span class="hljs-attr">env</span>: env};
 };
 
-stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+<span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {</pre></div></div>
             
         </li>
         
@@ -541,8 +541,8 @@ stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (
         <li id="section-19">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-19">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-19">&#x00a7;</a>
               </div>
               <p>Spawning a process will produce a process object on the
 stack. We can add notifiers to this process object so that
@@ -553,9 +553,9 @@ is similar, we’ll call the spawning operator as <code>go</code>.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'go'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> code = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(code.t === <span class="hljs-string">'block'</span>);</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;go&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> code = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(code.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);</pre></div></div>
             
         </li>
         
@@ -563,8 +563,8 @@ is similar, we’ll call the spawning operator as <code>go</code>.</p>
         <li id="section-20">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-20">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-20">&#x00a7;</a>
               </div>
               <p>When spawning off a new process, we don’t want the process to clobber the
 parent environment or stack. So we copy the environment and pass a fresh
@@ -572,11 +572,11 @@ empty stack.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">let</span> env2 = env.slice(<span class="hljs-number">0</span>);
-        enter(env2);
-        copy_bindings(code.bindings, current_bindings(env2));
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">let</span> env2 = env.<span class="hljs-title function_">slice</span>(<span class="hljs-number">0</span>);
+        <span class="hljs-title function_">enter</span>(env2);
+        <span class="hljs-title function_">copy_bindings</span>(code.<span class="hljs-property">bindings</span>, <span class="hljs-title function_">current_bindings</span>(env2));
 
-        <span class="hljs-keyword">let</span> proc = process(env2, code);</pre></div></div>
+        <span class="hljs-keyword">let</span> proc = <span class="hljs-title function_">process</span>(env2, code);</pre></div></div>
             
         </li>
         
@@ -584,8 +584,8 @@ empty stack.</p>
         <li id="section-21">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-21">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-21">&#x00a7;</a>
               </div>
               <p>A new process will receive a stack with two elements - the
 parent process, and the process itself. The block is free to
@@ -598,22 +598,22 @@ spawn, to enable two-way communication.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">let</span> new_stack = [stack.process, proc];
-        new_stack.process = proc;
-        <span class="hljs-keyword">return</span> later(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">let</span> new_stack = [stack.<span class="hljs-property">process</span>, proc];
+        new_stack.<span class="hljs-property">process</span> = proc;
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
             <span class="hljs-keyword">let</span> env = env2;
-            run(env, code.v, <span class="hljs-number">0</span>, new_stack, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-                leave(env);
-                proc.state = <span class="hljs-string">'done'</span>;
-                proc.result = pop(stack);
-                <span class="hljs-keyword">if</span> (proc.notify) {
-                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; proc.notify.length; ++i) {
-                        proc.notify[i](env, proc.result);
+            <span class="hljs-title function_">run</span>(env, code.<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, new_stack, <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+                <span class="hljs-title function_">leave</span>(env);
+                proc.<span class="hljs-property">state</span> = <span class="hljs-string">&#x27;done&#x27;</span>;
+                proc.<span class="hljs-property">result</span> = <span class="hljs-title function_">pop</span>(stack);
+                <span class="hljs-keyword">if</span> (proc.<span class="hljs-property">notify</span>) {
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; proc.<span class="hljs-property">notify</span>.<span class="hljs-property">length</span>; ++i) {
+                        proc.<span class="hljs-property">notify</span>[i](env, proc.<span class="hljs-property">result</span>);
                     }
-                    proc.notify = [];
+                    proc.<span class="hljs-property">notify</span> = [];
                 }
             });
-        }, push(stack, proc));
+        }, <span class="hljs-title function_">push</span>(stack, proc));
     }));</pre></div></div>
             
         </li>
@@ -622,8 +622,8 @@ spawn, to enable two-way communication.</p>
         <li id="section-22">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-22">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-22">&#x00a7;</a>
               </div>
               <p>Since we’re passing the process object as a property of the
 stack, we’ll need to ensure that run function when called raw
@@ -631,12 +631,12 @@ ensures that such a process object is available.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    run = (<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">old_run</span>) </span>{
-        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack, callback</span>) </span>{
-            <span class="hljs-keyword">if</span> (!stack.process) {
-                stack.process = process(env, block(program));
+            <div class="content"><div class='highlight'><pre>    run = (<span class="hljs-keyword">function</span> (<span class="hljs-params">old_run</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack, callback</span>) {
+            <span class="hljs-keyword">if</span> (!stack.<span class="hljs-property">process</span>) {
+                stack.<span class="hljs-property">process</span> = <span class="hljs-title function_">process</span>(env, <span class="hljs-title function_">block</span>(program));
             }
-            <span class="hljs-keyword">return</span> old_run(env, program, pc, stack, callback);
+            <span class="hljs-keyword">return</span> <span class="hljs-title function_">old_run</span>(env, program, pc, stack, callback);
         };
     }(run));</pre></div></div>
             
@@ -646,8 +646,8 @@ ensures that such a process object is available.</p>
         <li id="section-23">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-23">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-23">&#x00a7;</a>
               </div>
               <p>Invoking <code>await</code> with a process object on the stack will result
 in the spawning process pausing until the spawned process finishes,
@@ -667,10 +667,10 @@ primitives.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'await'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> proc = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(proc.t === <span class="hljs-string">'process'</span>);
-        <span class="hljs-built_in">console</span>.assert(callback);</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;await&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">let</span> proc = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(proc.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;process&#x27;</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(callback);</pre></div></div>
             
         </li>
         
@@ -678,16 +678,16 @@ primitives.</p>
         <li id="section-24">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-24">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-24">&#x00a7;</a>
               </div>
               <p>The process may be working or may be dead. If it is dead,
 then we need to immediately succeed with its result value.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (proc.state === <span class="hljs-string">'done'</span>) {
-            <span class="hljs-keyword">return</span> later(callback, push(stack, proc.result));
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (proc.<span class="hljs-property">state</span> === <span class="hljs-string">&#x27;done&#x27;</span>) {
+            <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, <span class="hljs-title function_">push</span>(stack, proc.<span class="hljs-property">result</span>));
         }</pre></div></div>
             
         </li>
@@ -696,8 +696,8 @@ then we need to immediately succeed with its result value.</p>
         <li id="section-25">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-25">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-25">&#x00a7;</a>
               </div>
               <p>The process isn’t done yet. So add ourselves to the
 notify list. Note that the notification callback itself
@@ -708,8 +708,8 @@ of running, and also we don’t blow the javascript stack.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        proc.notify.push(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">result</span>) </span>{
-            later(callback, push(stack, result));
+            <div class="content"><div class='highlight'><pre>        proc.<span class="hljs-property">notify</span>.<span class="hljs-title function_">push</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">result</span>) {
+            <span class="hljs-title function_">later</span>(callback, <span class="hljs-title function_">push</span>(stack, result));
         });</pre></div></div>
             
         </li>
@@ -718,8 +718,8 @@ of running, and also we don’t blow the javascript stack.</p>
         <li id="section-26">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-26">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-26">&#x00a7;</a>
               </div>
               <p>Return value will be discarded in the async case anyway.</p>
 
@@ -734,8 +734,8 @@ of running, and also we don’t blow the javascript stack.</p>
         <li id="section-27">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-27">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-27">&#x00a7;</a>
               </div>
               <p>Though we shouldn’t need it in most cases, we’ll add a 
 <code>yield</code> operator which will give up time for another
@@ -743,9 +743,9 @@ concurrency process to run. This takes no arguments.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'yield'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-built_in">console</span>.assert(callback);
-        <span class="hljs-keyword">return</span> later(callback, stack);
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;yield&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(callback);
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, stack);
     }));</pre></div></div>
             
         </li>
@@ -754,8 +754,8 @@ concurrency process to run. This takes no arguments.</p>
         <li id="section-28">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-28">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-28">&#x00a7;</a>
               </div>
               <p>We obviously need the quintessential asynchronous operation
 of sleeping for a given number of milliseconds! We use the
@@ -764,10 +764,10 @@ that <em>all</em> processes would be asleep during this period.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'after'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> ms = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(ms.t === <span class="hljs-string">'number'</span>);
-        callback &amp;&amp; setTimeout(callback, ms.v, stack);
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;after&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">let</span> ms = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(ms.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;number&#x27;</span>);
+        callback &amp;&amp; <span class="hljs-built_in">setTimeout</span>(callback, ms.<span class="hljs-property">v</span>, stack);
         <span class="hljs-keyword">return</span> stack;
     }));
 });</pre></div></div>
@@ -778,8 +778,8 @@ that <em>all</em> processes would be asleep during this period.</p>
         <li id="section-29">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-29">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-29">&#x00a7;</a>
               </div>
               <p>We’ll finally modify the main control structures to also support
 async operation. This includes <code>do</code>, <code>defun</code>, <code>if</code>, <code>branch</code> and <code>vocab</code>.
@@ -790,17 +790,17 @@ choice is that there will always be a yield at block boundaries.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>do_block = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, block, callback</span>) </span>{
-    enter(env);
-    copy_bindings(block.bindings, current_bindings(env));
+            <div class="content"><div class='highlight'><pre>do_block = <span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, block, callback</span>) {
+    <span class="hljs-title function_">enter</span>(env);
+    <span class="hljs-title function_">copy_bindings</span>(block.<span class="hljs-property">bindings</span>, <span class="hljs-title function_">current_bindings</span>(env));
     <span class="hljs-keyword">if</span> (callback) {
-        <span class="hljs-keyword">return</span> run(env, block.v, <span class="hljs-number">0</span>, stack, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-            leave(env);
-            callback(stack);
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(env, block.<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack, <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+            <span class="hljs-title function_">leave</span>(env);
+            <span class="hljs-title function_">callback</span>(stack);
         });
     } <span class="hljs-keyword">else</span> {
-        stack = run(env, block.v, <span class="hljs-number">0</span>, stack);
-        leave(env);
+        stack = <span class="hljs-title function_">run</span>(env, block.<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack);
+        <span class="hljs-title function_">leave</span>(env);
         <span class="hljs-keyword">return</span> stack;
     }
 };</pre></div></div>
@@ -811,8 +811,8 @@ choice is that there will always be a yield at block boundaries.</p>
         <li id="section-30">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-30">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-30">&#x00a7;</a>
               </div>
               <p>So far, we’ve had to deal only with one environment.
 Now that we need to transport vocabularies between environments,
@@ -822,37 +822,37 @@ by default.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
-    define(env, <span class="hljs-string">'do'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> code = pop(stack);
-        <span class="hljs-keyword">if</span> (code.t === <span class="hljs-string">'prim'</span>) {
-            <span class="hljs-keyword">return</span> apply(env, code, stack, callback);
+            <div class="content"><div class='highlight'><pre><span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;do&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">let</span> code = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-keyword">if</span> (code.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;prim&#x27;</span>) {
+            <span class="hljs-keyword">return</span> <span class="hljs-title function_">apply</span>(env, code, stack, callback);
         }
         
-        <span class="hljs-built_in">console</span>.assert(code.t === <span class="hljs-string">'block'</span>);
-        <span class="hljs-keyword">return</span> do_block(env, stack, code, callback);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(code.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">do_block</span>(env, stack, code, callback);
     }));
 
-    define(env, <span class="hljs-string">'defun'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> sym = pop(stack), block = pop(stack), p = <span class="hljs-literal">null</span>;
-        <span class="hljs-built_in">console</span>.assert(sym.t === <span class="hljs-string">'symbol'</span>);
-        <span class="hljs-keyword">if</span> (block.t === <span class="hljs-string">'prim'</span>) {
-            define(env, sym.v, block);
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;defun&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> sym = <span class="hljs-title function_">pop</span>(stack), block = <span class="hljs-title function_">pop</span>(stack), p = <span class="hljs-literal">null</span>;
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(sym.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;symbol&#x27;</span>);
+        <span class="hljs-keyword">if</span> (block.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;prim&#x27;</span>) {
+            <span class="hljs-title function_">define</span>(env, sym.<span class="hljs-property">v</span>, block);
         } <span class="hljs-keyword">else</span> {
-            <span class="hljs-built_in">console</span>.assert(block.t === <span class="hljs-string">'block'</span>);
-            define(env, sym.v, p = prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-                <span class="hljs-keyword">return</span> do_block(env, stack, block, callback);
+            <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(block.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);
+            <span class="hljs-title function_">define</span>(env, sym.<span class="hljs-property">v</span>, p = <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+                <span class="hljs-keyword">return</span> <span class="hljs-title function_">do_block</span>(env, stack, block, callback);
             }));
-            p.block = block;
+            p.<span class="hljs-property">block</span> = block;
         }
         <span class="hljs-keyword">return</span> stack;
     }));
 
-    define(env, <span class="hljs-string">'if'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> blk = pop(stack), cond = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(blk.t === <span class="hljs-string">'block'</span>);
-        <span class="hljs-built_in">console</span>.assert(cond.t === <span class="hljs-string">'bool'</span>);
-        <span class="hljs-keyword">if</span> (cond.v) {</pre></div></div>
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;if&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">let</span> blk = <span class="hljs-title function_">pop</span>(stack), cond = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(blk.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(cond.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;bool&#x27;</span>);
+        <span class="hljs-keyword">if</span> (cond.<span class="hljs-property">v</span>) {</pre></div></div>
             
         </li>
         
@@ -860,8 +860,8 @@ by default.</p>
         <li id="section-31">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-31">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-31">&#x00a7;</a>
               </div>
               <p>Note that we’re again making the choice that the 
 <code>if</code> block will get evaluated in the enclosing scope
@@ -871,42 +871,42 @@ can make new environment for the block to execute in.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">return</span> run(env, blk.v, <span class="hljs-number">0</span>, stack, callback);
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(env, blk.<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack, callback);
         }
 
         <span class="hljs-keyword">if</span> (callback) {
-            <span class="hljs-keyword">return</span> later(callback, stack);
+            <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, stack);
         }
 
         <span class="hljs-keyword">return</span> stack;
     }));
 
-    define(env, <span class="hljs-string">'branch'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> cond_pairs = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(cond_pairs.t === <span class="hljs-string">'block'</span>);
-        <span class="hljs-built_in">console</span>.assert(cond_pairs.v.length % <span class="hljs-number">2</span> === <span class="hljs-number">0</span>);
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;branch&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">let</span> cond_pairs = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(cond_pairs.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(cond_pairs.<span class="hljs-property">v</span>.<span class="hljs-property">length</span> % <span class="hljs-number">2</span> === <span class="hljs-number">0</span>);
         <span class="hljs-keyword">if</span> (callback) {
-            <span class="hljs-keyword">let</span> step = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">i, callback</span>) </span>{
-                <span class="hljs-keyword">if</span> (i &gt;= cond_pairs.v.length) {
-                    <span class="hljs-keyword">return</span> later(callback, stack);
+            <span class="hljs-keyword">let</span> step = <span class="hljs-keyword">function</span> (<span class="hljs-params">i, callback</span>) {
+                <span class="hljs-keyword">if</span> (i &gt;= cond_pairs.<span class="hljs-property">v</span>.<span class="hljs-property">length</span>) {
+                    <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, stack);
                 }
-                <span class="hljs-built_in">console</span>.assert(cond_pairs.v[i].t === <span class="hljs-string">'block'</span>);
-                <span class="hljs-built_in">console</span>.assert(cond_pairs.v[i+<span class="hljs-number">1</span>].t === <span class="hljs-string">'block'</span>);
-                <span class="hljs-keyword">return</span> run(env, cond_pairs.v[i].v, <span class="hljs-number">0</span>, stack, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-                    <span class="hljs-keyword">let</span> b = pop(stack);
-                    <span class="hljs-built_in">console</span>.assert(b.t === <span class="hljs-string">'bool'</span>);
-                    <span class="hljs-keyword">if</span> (b.v) {
-                        run(env, cond_pairs.v[i+<span class="hljs-number">1</span>].v, <span class="hljs-number">0</span>, stack, callback);
+                <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(cond_pairs.<span class="hljs-property">v</span>[i].<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);
+                <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(cond_pairs.<span class="hljs-property">v</span>[i+<span class="hljs-number">1</span>].<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);
+                <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(env, cond_pairs.<span class="hljs-property">v</span>[i].<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack, <span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+                    <span class="hljs-keyword">let</span> b = <span class="hljs-title function_">pop</span>(stack);
+                    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(b.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;bool&#x27;</span>);
+                    <span class="hljs-keyword">if</span> (b.<span class="hljs-property">v</span>) {
+                        <span class="hljs-title function_">run</span>(env, cond_pairs.<span class="hljs-property">v</span>[i+<span class="hljs-number">1</span>].<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack, callback);
                     } <span class="hljs-keyword">else</span> {
-                        step(i+<span class="hljs-number">1</span>, callback);
+                        <span class="hljs-title function_">step</span>(i+<span class="hljs-number">1</span>, callback);
                     }
                 });
             };
-            <span class="hljs-keyword">return</span> step(<span class="hljs-number">0</span>, callback);
+            <span class="hljs-keyword">return</span> <span class="hljs-title function_">step</span>(<span class="hljs-number">0</span>, callback);
         } <span class="hljs-keyword">else</span> {
-            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; cond_pairs.v.length; i += <span class="hljs-number">2</span>) {
-                <span class="hljs-built_in">console</span>.assert(cond_pairs.v[i].t === <span class="hljs-string">'block'</span>);
-                <span class="hljs-built_in">console</span>.assert(cond_pairs.v[i+<span class="hljs-number">1</span>].t === <span class="hljs-string">'block'</span>);</pre></div></div>
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; cond_pairs.<span class="hljs-property">v</span>.<span class="hljs-property">length</span>; i += <span class="hljs-number">2</span>) {
+                <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(cond_pairs.<span class="hljs-property">v</span>[i].<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);
+                <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(cond_pairs.<span class="hljs-property">v</span>[i+<span class="hljs-number">1</span>].<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);</pre></div></div>
             
         </li>
         
@@ -914,17 +914,17 @@ can make new environment for the block to execute in.</p>
         <li id="section-32">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-32">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-32">&#x00a7;</a>
               </div>
               <p>Check the condition.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>                stack = run(env, cond_pairs.v[i].v, <span class="hljs-number">0</span>, stack);
-                <span class="hljs-keyword">let</span> b = pop(stack);
-                <span class="hljs-built_in">console</span>.assert(b.t === <span class="hljs-string">'bool'</span>);
-                <span class="hljs-keyword">if</span> (b.v) {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>                stack = <span class="hljs-title function_">run</span>(env, cond_pairs.<span class="hljs-property">v</span>[i].<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack);
+                <span class="hljs-keyword">let</span> b = <span class="hljs-title function_">pop</span>(stack);
+                <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(b.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;bool&#x27;</span>);
+                <span class="hljs-keyword">if</span> (b.<span class="hljs-property">v</span>) {</pre></div></div>
             
         </li>
         
@@ -932,24 +932,24 @@ can make new environment for the block to execute in.</p>
         <li id="section-33">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-33">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-33">&#x00a7;</a>
               </div>
               <p>Condition satisfied. Now evaluate the
 “consequence” block corresponding to that condition.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>                    <span class="hljs-keyword">return</span> run(env, cond_pairs.v[i+<span class="hljs-number">1</span>].v, <span class="hljs-number">0</span>, stack);
+            <div class="content"><div class='highlight'><pre>                    <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(env, cond_pairs.<span class="hljs-property">v</span>[i+<span class="hljs-number">1</span>].<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack);
                 }
             }
             <span class="hljs-keyword">return</span> stack;
         }
     }));
 
-    define(env, <span class="hljs-string">'vocab'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> defs = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(defs.t === <span class="hljs-string">'block'</span>);</pre></div></div>
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;vocab&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">let</span> defs = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(defs.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);</pre></div></div>
             
         </li>
         
@@ -957,26 +957,26 @@ can make new environment for the block to execute in.</p>
         <li id="section-34">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-34">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-34">&#x00a7;</a>
               </div>
               <p>Execute the block and capture its definitions before
 we leave it.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        enter(env);
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-title function_">enter</span>(env);
         <span class="hljs-keyword">if</span> (callback) {
-            <span class="hljs-keyword">return</span> run(env, defs.v, <span class="hljs-number">0</span>, stack, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-                <span class="hljs-keyword">let</span> bindings = copy_bindings(current_bindings(env), {});
-                leave(env);
+            <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(env, defs.<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack, <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+                <span class="hljs-keyword">let</span> bindings = <span class="hljs-title function_">copy_bindings</span>(<span class="hljs-title function_">current_bindings</span>(env), {});
+                <span class="hljs-title function_">leave</span>(env);
                 <span class="hljs-keyword">delete</span> bindings[parent_scope_key];
-                callback(push(stack, vocab(bindings)));
+                <span class="hljs-title function_">callback</span>(<span class="hljs-title function_">push</span>(stack, <span class="hljs-title function_">vocab</span>(bindings)));
             });
         } <span class="hljs-keyword">else</span> {
-            stack = run(env, defs.v, <span class="hljs-number">0</span>, stack);
-            <span class="hljs-keyword">let</span> bindings = copy_bindings(current_bindings(env), {});
-            leave(env);</pre></div></div>
+            stack = <span class="hljs-title function_">run</span>(env, defs.<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack);
+            <span class="hljs-keyword">let</span> bindings = <span class="hljs-title function_">copy_bindings</span>(<span class="hljs-title function_">current_bindings</span>(env), {});
+            <span class="hljs-title function_">leave</span>(env);</pre></div></div>
             
         </li>
         
@@ -984,8 +984,8 @@ we leave it.</p>
         <li id="section-35">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-35">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-35">&#x00a7;</a>
               </div>
               <p>We don’t want to preserve the scope chain in this case, so
 delete the parent scope entry.</p>
@@ -994,7 +994,7 @@ delete the parent scope entry.</p>
             
             <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">delete</span> bindings[parent_scope_key];
 
-            <span class="hljs-keyword">return</span> push(stack, vocab(bindings));
+            <span class="hljs-keyword">return</span> <span class="hljs-title function_">push</span>(stack, <span class="hljs-title function_">vocab</span>(bindings));
         }
     }));
 });</pre></div></div>
@@ -1005,8 +1005,8 @@ delete the parent scope entry.</p>
         <li id="section-36">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-36">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-36">&#x00a7;</a>
               </div>
               <h2 id="communicating-between-processes">Communicating between processes</h2>
 
@@ -1018,8 +1018,8 @@ delete the parent scope entry.</p>
         <li id="section-37">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-37">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-37">&#x00a7;</a>
               </div>
               <p><strong>Date</strong>: 11 Apr 2017</p>
 
@@ -1031,8 +1031,8 @@ delete the parent scope entry.</p>
         <li id="section-38">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-38">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-38">&#x00a7;</a>
               </div>
               <p>So far, we can spawn a process and the only way we can 
 interact with it is to await its completion, upon which
@@ -1048,12 +1048,12 @@ more. </p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>process = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, block</span>) </span>{
-    <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'process'</span>, <span class="hljs-attr">v</span>: block, <span class="hljs-attr">state</span>: <span class="hljs-string">'waiting'</span>, <span class="hljs-attr">notify</span>: [],
-            <span class="hljs-attr">mailbox</span>: mailbox(), <span class="hljs-attr">env</span>: env, <span class="hljs-attr">pid</span>: process.pid++};
+            <div class="content"><div class='highlight'><pre>process = <span class="hljs-keyword">function</span> (<span class="hljs-params">env, block</span>) {
+    <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">&#x27;process&#x27;</span>, <span class="hljs-attr">v</span>: block, <span class="hljs-attr">state</span>: <span class="hljs-string">&#x27;waiting&#x27;</span>, <span class="hljs-attr">notify</span>: [],
+            <span class="hljs-attr">mailbox</span>: <span class="hljs-title function_">mailbox</span>(), <span class="hljs-attr">env</span>: env, <span class="hljs-attr">pid</span>: process.<span class="hljs-property">pid</span>++};
 };
 
-process.pid = <span class="hljs-number">1</span>;</pre></div></div>
+process.<span class="hljs-property">pid</span> = <span class="hljs-number">1</span>;</pre></div></div>
             
         </li>
         
@@ -1061,8 +1061,8 @@ process.pid = <span class="hljs-number">1</span>;</pre></div></div>
         <li id="section-39">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-39">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-39">&#x00a7;</a>
               </div>
               <p>We’ll introduce a slang type to represent the mailbox. We’ll
 later transform this into something that can be used at the language
@@ -1070,29 +1070,29 @@ level too.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> mailbox = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-    <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'mailbox'</span>, <span class="hljs-attr">v</span>: [], <span class="hljs-attr">receiver</span>: <span class="hljs-literal">null</span>};
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">let</span> mailbox = <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+    <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">&#x27;mailbox&#x27;</span>, <span class="hljs-attr">v</span>: [], <span class="hljs-attr">receiver</span>: <span class="hljs-literal">null</span>};
 };
 
-<span class="hljs-keyword">let</span> mailbox_post = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">mb, msg</span>) </span>{
-    mb.v.push(msg);
-    <span class="hljs-keyword">if</span> (mb.receiver) {
-        later(mb.receiver);
-        mb.receiver = <span class="hljs-literal">null</span>;
+<span class="hljs-keyword">let</span> mailbox_post = <span class="hljs-keyword">function</span> (<span class="hljs-params">mb, msg</span>) {
+    mb.<span class="hljs-property">v</span>.<span class="hljs-title function_">push</span>(msg);
+    <span class="hljs-keyword">if</span> (mb.<span class="hljs-property">receiver</span>) {
+        <span class="hljs-title function_">later</span>(mb.<span class="hljs-property">receiver</span>);
+        mb.<span class="hljs-property">receiver</span> = <span class="hljs-literal">null</span>;
     }
     <span class="hljs-keyword">return</span> msg;
 };
 
-<span class="hljs-keyword">let</span> mailbox_receive = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">mb, stack, callback</span>) </span>{
-    <span class="hljs-keyword">if</span> (mb.v.length &gt; <span class="hljs-number">0</span>) {
-        <span class="hljs-keyword">let</span> msg = mb.v.shift();
-        mb.receiver = <span class="hljs-literal">null</span>;
-        <span class="hljs-keyword">return</span> later(callback, push(stack, msg));
+<span class="hljs-keyword">let</span> mailbox_receive = <span class="hljs-keyword">function</span> (<span class="hljs-params">mb, stack, callback</span>) {
+    <span class="hljs-keyword">if</span> (mb.<span class="hljs-property">v</span>.<span class="hljs-property">length</span> &gt; <span class="hljs-number">0</span>) {
+        <span class="hljs-keyword">let</span> msg = mb.<span class="hljs-property">v</span>.<span class="hljs-title function_">shift</span>();
+        mb.<span class="hljs-property">receiver</span> = <span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, <span class="hljs-title function_">push</span>(stack, msg));
     }
 
-    mb.receiver = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        <span class="hljs-keyword">let</span> msg = mb.v.shift();
-        callback(push(stack, msg));
+    mb.<span class="hljs-property">receiver</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+        <span class="hljs-keyword">let</span> msg = mb.<span class="hljs-property">v</span>.<span class="hljs-title function_">shift</span>();
+        <span class="hljs-title function_">callback</span>(<span class="hljs-title function_">push</span>(stack, msg));
     };
 
     <span class="hljs-keyword">return</span> stack;
@@ -1104,15 +1104,15 @@ level too.</p>
         <li id="section-40">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-40">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-40">&#x00a7;</a>
               </div>
               <p>We need facilities to post messages to a process and for a process
 to receive and … um … process messages from another process.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+            <div class="content"><div class='highlight'><pre><span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {</pre></div></div>
             
         </li>
         
@@ -1120,8 +1120,8 @@ to receive and … um … process messages from another process.</p>
         <li id="section-41">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-41">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-41">&#x00a7;</a>
               </div>
               <p>Posting a message to a process is a synchronous operation that
 places the message into the process’ mailbox.</p>
@@ -1129,10 +1129,10 @@ places the message into the process’ mailbox.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'post'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> msg = pop(stack), proc = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(proc.t === <span class="hljs-string">'process'</span>);
-        mailbox_post(proc.mailbox, msg);
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;post&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> msg = <span class="hljs-title function_">pop</span>(stack), proc = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(proc.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;process&#x27;</span>);
+        <span class="hljs-title function_">mailbox_post</span>(proc.<span class="hljs-property">mailbox</span>, msg);
         <span class="hljs-keyword">return</span> stack;
     }));</pre></div></div>
             
@@ -1142,8 +1142,8 @@ places the message into the process’ mailbox.</p>
         <li id="section-42">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-42">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-42">&#x00a7;</a>
               </div>
               <p>Receiving a message will wait for a messages to arrive into the current
 process’ mailbox, and will place it on the stack when it does. Further
@@ -1152,10 +1152,10 @@ code can then examine the message and take appropriate actions.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'receive'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> proc = stack.process;
-        <span class="hljs-built_in">console</span>.assert(proc.t === <span class="hljs-string">'process'</span>);
-        mailbox_receive(proc.mailbox, stack, callback);
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;receive&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">let</span> proc = stack.<span class="hljs-property">process</span>;
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(proc.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;process&#x27;</span>);
+        <span class="hljs-title function_">mailbox_receive</span>(proc.<span class="hljs-property">mailbox</span>, stack, callback);
         <span class="hljs-keyword">return</span> stack;
     }));</pre></div></div>
             
@@ -1165,8 +1165,8 @@ code can then examine the message and take appropriate actions.</p>
         <li id="section-43">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-43">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-43">&#x00a7;</a>
               </div>
               <p>Sometimes, we may not be able to process a received message until another
 one arrives, since messages arrive non-determinstically. In such cases,
@@ -1175,11 +1175,11 @@ we’d need to postpone a message back into the process’ mailbox.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'postpone'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> msg = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(proc.t === <span class="hljs-string">'process'</span>);
-        <span class="hljs-built_in">console</span>.assert(stack.process);
-        stack.process.post(msg);
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;postpone&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> msg = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(proc.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;process&#x27;</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(stack.<span class="hljs-property">process</span>);
+        stack.<span class="hljs-property">process</span>.<span class="hljs-title function_">post</span>(msg);
         <span class="hljs-keyword">return</span> stack;
     }));
 });</pre></div></div>
@@ -1190,10 +1190,10 @@ we’d need to postpone a message back into the process’ mailbox.</p>
         <li id="section-44">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-44">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-44">&#x00a7;</a>
               </div>
-              <h2 id="processes-as-objects-">Processes as “objects”</h2>
+              <h2 id="processes-as-objects">Processes as “objects”</h2>
 
             </div>
             
@@ -1203,8 +1203,8 @@ we’d need to postpone a message back into the process’ mailbox.</p>
         <li id="section-45">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-45">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-45">&#x00a7;</a>
               </div>
               <p>If you recall, we said in the section on object oriented programming that
 that main concept behind OOP is objects which interact by passing messages
@@ -1237,8 +1237,8 @@ breaking an electrical circuit is immediate .. for practical purposes.</p>
         <li id="section-46">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-46">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-46">&#x00a7;</a>
               </div>
               <h2 id="supporting-objects">Supporting objects</h2>
 
@@ -1250,8 +1250,8 @@ breaking an electrical circuit is immediate .. for practical purposes.</p>
         <li id="section-47">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-47">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-47">&#x00a7;</a>
               </div>
               <p>Let’s return to our mundane symchronous world of objects for now.</p>
 
@@ -1263,8 +1263,8 @@ breaking an electrical circuit is immediate .. for practical purposes.</p>
         <li id="section-48">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-48">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-48">&#x00a7;</a>
               </div>
               <p>We implemented message passing as method invocation in our object
 system. That doesn’t yet support asynchronous operation. We’ll need
@@ -1278,8 +1278,8 @@ to fix that before we can use objects in this new circumstance.</p>
         <li id="section-49">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-49">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-49">&#x00a7;</a>
               </div>
               <p>We can add general asynchronous support to <code>send</code>, <code>send*</code> and
 <code>new</code> (for async constructor), but instead of doing that, we’ll
@@ -1311,8 +1311,8 @@ argument, after which the regular <code>send</code> arguments appear.</p>
         <li id="section-50">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-50">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-50">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Note</strong>: This means the appropriate vocabularies must be designed for
@@ -1324,49 +1324,49 @@ should pass results only by posting to the provided process object.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
-    define(env, <span class="hljs-string">'send&amp;'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> msg = pop(stack), thing = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(msg.t === <span class="hljs-string">'symbol'</span>);
+<span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;send&amp;&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> msg = <span class="hljs-title function_">pop</span>(stack), thing = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(msg.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;symbol&#x27;</span>);
 
-        <span class="hljs-keyword">if</span> (!thing.vocab || !thing.vocab.v[msg.v]) {
-            <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'No vocabulary relevant to message'</span>);
+        <span class="hljs-keyword">if</span> (!thing.<span class="hljs-property">vocab</span> || !thing.<span class="hljs-property">vocab</span>.<span class="hljs-property">v</span>[msg.<span class="hljs-property">v</span>]) {
+            <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;No vocabulary relevant to message&#x27;</span>);
             <span class="hljs-keyword">return</span> stack;
         }
 
-        <span class="hljs-keyword">let</span> method_or_val = thing.vocab.v[msg.v];
+        <span class="hljs-keyword">let</span> method_or_val = thing.<span class="hljs-property">vocab</span>.<span class="hljs-property">v</span>[msg.<span class="hljs-property">v</span>];
         <span class="hljs-keyword">if</span> (!method_or_val) {
-            <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Vocabulary doesn\'t accept message "'</span> + msg.v + <span class="hljs-string">'"'</span>);
+            <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;Vocabulary doesn\&#x27;t accept message &quot;&#x27;</span> + msg.<span class="hljs-property">v</span> + <span class="hljs-string">&#x27;&quot;&#x27;</span>);
             <span class="hljs-keyword">return</span> stack;
         }
 
-        <span class="hljs-keyword">switch</span> (method_or_val.t) {
-            <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:
-                push(stack, thing);
-                push(stack, stack.process); <span class="hljs-comment">// Extra process argument.</span>
-                <span class="hljs-keyword">return</span> apply(env, method_or_val, stack);
-            <span class="hljs-keyword">default</span>:
-                <span class="hljs-keyword">return</span> push(stack, method_or_val); <span class="hljs-comment">// Normal value.</span>
+        <span class="hljs-keyword">switch</span> (method_or_val.<span class="hljs-property">t</span>) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;prim&#x27;</span>:
+                <span class="hljs-title function_">push</span>(stack, thing);
+                <span class="hljs-title function_">push</span>(stack, stack.<span class="hljs-property">process</span>); <span class="hljs-comment">// Extra process argument.</span>
+                <span class="hljs-keyword">return</span> <span class="hljs-title function_">apply</span>(env, method_or_val, stack);
+            <span class="hljs-attr">default</span>:
+                <span class="hljs-keyword">return</span> <span class="hljs-title function_">push</span>(stack, method_or_val); <span class="hljs-comment">// Normal value.</span>
         }
     }));
 
-    define(env, <span class="hljs-string">'send*&amp;'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> msg = pop(stack), voc = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(msg.t === <span class="hljs-string">'symbol'</span>);
-        <span class="hljs-built_in">console</span>.assert(voc.t === <span class="hljs-string">'vocab'</span>);
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;send*&amp;&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> msg = <span class="hljs-title function_">pop</span>(stack), voc = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(msg.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;symbol&#x27;</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(voc.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;vocab&#x27;</span>);
 
-        <span class="hljs-keyword">let</span> method_or_val = voc.v[msg.v];
+        <span class="hljs-keyword">let</span> method_or_val = voc.<span class="hljs-property">v</span>[msg.<span class="hljs-property">v</span>];
         <span class="hljs-keyword">if</span> (!method_or_val) {
-            <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Vocabulary doesn\'t accept message "'</span> + msg.v + <span class="hljs-string">'"'</span>);
+            <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;Vocabulary doesn\&#x27;t accept message &quot;&#x27;</span> + msg.<span class="hljs-property">v</span> + <span class="hljs-string">&#x27;&quot;&#x27;</span>);
             <span class="hljs-keyword">return</span> stack;
         }
 
-        <span class="hljs-keyword">if</span> (method_or_val.t === <span class="hljs-string">'prim'</span>) {
-            push(stack, stack.process); <span class="hljs-comment">// Extra process argument.</span>
-            <span class="hljs-keyword">return</span> apply(env, method_or_val, stack);
+        <span class="hljs-keyword">if</span> (method_or_val.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;prim&#x27;</span>) {
+            <span class="hljs-title function_">push</span>(stack, stack.<span class="hljs-property">process</span>); <span class="hljs-comment">// Extra process argument.</span>
+            <span class="hljs-keyword">return</span> <span class="hljs-title function_">apply</span>(env, method_or_val, stack);
         }
 
-        <span class="hljs-keyword">return</span> push(stack, method_or_val);
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">push</span>(stack, method_or_val);
     }));
 });</pre></div></div>
             
@@ -1376,8 +1376,8 @@ stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (
         <li id="section-51">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-51">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-51">&#x00a7;</a>
               </div>
               <h3 id="the-trouble-with-such-objects">The trouble with such objects</h3>
 
@@ -1389,8 +1389,8 @@ stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (
         <li id="section-52">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-52">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-52">&#x00a7;</a>
               </div>
               <p>Beyond this, we’ll find that working with objects in an environment where
 such concurrency has prolific use is extremely hard to get right.  In
@@ -1408,8 +1408,8 @@ into how to setup interplay between objects and concurrency later on.</p>
         <li id="section-53">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-53">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-53">&#x00a7;</a>
               </div>
               <h2 id="tests">Tests</h2>
 
@@ -1421,15 +1421,15 @@ into how to setup interplay between objects and concurrency later on.</p>
         <li id="section-54">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-54">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-54">&#x00a7;</a>
               </div>
               <h3 id="some-debug-utilities">Some debug utilities</h3>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>
-stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+<span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {</pre></div></div>
             
         </li>
         
@@ -1437,8 +1437,8 @@ stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (
         <li id="section-55">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-55">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-55">&#x00a7;</a>
               </div>
               <p>The top of the stack is expected to contain a message string
 that will be gobbled. The next stack item will be printed 
@@ -1446,9 +1446,9 @@ without popping it off the stack.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'debug'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-       <span class="hljs-keyword">let</span> str = pop(stack).v;
-       <span class="hljs-built_in">console</span>.log(str, topitem(stack).v);
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;debug&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+       <span class="hljs-keyword">let</span> str = <span class="hljs-title function_">pop</span>(stack).<span class="hljs-property">v</span>;
+       <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(str, <span class="hljs-title function_">topitem</span>(stack).<span class="hljs-property">v</span>);
        <span class="hljs-keyword">return</span> stack;
     }));</pre></div></div>
             
@@ -1458,8 +1458,8 @@ without popping it off the stack.</p>
         <li id="section-56">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-56">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-56">&#x00a7;</a>
               </div>
               <p>A <code>breakpoint</code> is useful to invoke the Javascript debugger’s
 breakpoint without having any other impact on program
@@ -1467,7 +1467,7 @@ behaviour.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'breakpoint'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;breakpoint&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
         <span class="hljs-keyword">debugger</span>;
         <span class="hljs-keyword">return</span> stack;
     }));
@@ -1479,8 +1479,8 @@ behaviour.</p>
         <li id="section-57">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-57">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-57">&#x00a7;</a>
               </div>
               <h3 id="test-count-down-timer">Test: Count down timer</h3>
 
@@ -1492,8 +1492,8 @@ behaviour.</p>
         <li id="section-58">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-58">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-58">&#x00a7;</a>
               </div>
               <p>Basic asynchronicity test where we run a count-down timer
 while the code looks like a normal recursive function.</p>
@@ -1501,8 +1501,8 @@ while the code looks like a normal recursive function.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-tests.ticktock = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) </span>{
-    <span class="hljs-keyword">let</span> program = parse_slang(<span class="hljs-string">`
+tests.<span class="hljs-property">ticktock</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) {
+    <span class="hljs-keyword">let</span> program = <span class="hljs-title function_">parse_slang</span>(<span class="hljs-string">`
         [ :i def
           i 0 &gt;
           [ i print 1000 after
@@ -1512,8 +1512,8 @@ tests.ticktock = <span class="hljs-function"><span class="hljs-keyword">function
         count-down
     `</span>);
 
-    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [number(n)], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"done"</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(<span class="hljs-title function_">test_env</span>(), program, <span class="hljs-number">0</span>, [<span class="hljs-title function_">number</span>(n)], <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;done&quot;</span>);
     });
 };</pre></div></div>
             
@@ -1523,34 +1523,34 @@ tests.ticktock = <span class="hljs-function"><span class="hljs-keyword">function
         <li id="section-59">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-59">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-59">&#x00a7;</a>
               </div>
               <h3 id="test-message-passing">Test: Message passing</h3>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>
-tests.passmsg = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-    <span class="hljs-keyword">let</span> program = parse_slang(<span class="hljs-string">`
-        [ "STARTED" debug
-          "one" print receive print
+tests.<span class="hljs-property">passmsg</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+    <span class="hljs-keyword">let</span> program = <span class="hljs-title function_">parse_slang</span>(<span class="hljs-string">`
+        [ &quot;STARTED&quot; debug
+          &quot;one&quot; print receive print
           1000 after
-          "two" print receive print
+          &quot;two&quot; print receive print
           1000 after
-          "three" print receive print
+          &quot;three&quot; print receive print
           1000 after
-          "four" print receive print
+          &quot;four&quot; print receive print
           1000 after
         ] go :target def
-        target "ondru" post
-        target "irandu" post
-        target "moondru" post
-        target "naangu" post
+        target &quot;ondru&quot; post
+        target &quot;irandu&quot; post
+        target &quot;moondru&quot; post
+        target &quot;naangu&quot; post
     `</span>);
 
-    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"done"</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(<span class="hljs-title function_">test_env</span>(), program, <span class="hljs-number">0</span>, [], <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;done&quot;</span>);
     });
 };</pre></div></div>
             
@@ -1560,8 +1560,8 @@ tests.passmsg = <span class="hljs-function"><span class="hljs-keyword">function<
         <li id="section-60">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-60">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-60">&#x00a7;</a>
               </div>
               <h3 id="test-ping-pong">Test: Ping Pong</h3>
 
@@ -1573,8 +1573,8 @@ tests.passmsg = <span class="hljs-function"><span class="hljs-keyword">function<
         <li id="section-61">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-61">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-61">&#x00a7;</a>
               </div>
               <p>A basic ping pong messaging between two processes.  The main process
 launches two processes first, it then tells them about each other and what
@@ -1584,13 +1584,13 @@ starts the back-n-forth (pun unintentionally intended ;)</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-tests.pingpong = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) </span>{
-    <span class="hljs-keyword">let</span> program = parse_slang(<span class="hljs-string">`
+tests.<span class="hljs-property">pingpong</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) {
+    <span class="hljs-keyword">let</span> program = <span class="hljs-title function_">parse_slang</span>(<span class="hljs-string">`
         :n def
-        [ "PINGPONG" print
+        [ &quot;PINGPONG&quot; print
           
-          "The first two messages tell us who we are
-          and who to send messages to.";
+          &quot;The first two messages tell us who we are
+          and who to send messages to.&quot;;
 
           receive :target def
           receive :message def
@@ -1606,16 +1606,16 @@ tests.pingpong = <span class="hljs-function"><span class="hljs-keyword">function
         pingpong go :ping def
         pingpong go :pong def
 
-        ping pong post     "Tell ping that pong is its target";
-        ping "ping" post
-        pong ping post     "Tell pong that ping is its target";
-        pong "pong" post
+        ping pong post     &quot;Tell ping that pong is its target&quot;;
+        ping &quot;ping&quot; post
+        pong ping post     &quot;Tell pong that ping is its target&quot;;
+        pong &quot;pong&quot; post
 
-        ping n post        "Start pingponging";
+        ping n post        &quot;Start pingponging&quot;;
     `</span>);
 
-    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [number(n)], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"done"</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(<span class="hljs-title function_">test_env</span>(), program, <span class="hljs-number">0</span>, [<span class="hljs-title function_">number</span>(n)], <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;done&quot;</span>);
     });
 };</pre></div></div>
             
@@ -1625,8 +1625,8 @@ tests.pingpong = <span class="hljs-function"><span class="hljs-keyword">function
         <li id="section-62">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-62">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-62">&#x00a7;</a>
               </div>
               <h2 id="scoping-rules-for-concurrency">Scoping rules for concurrency</h2>
 
@@ -1638,8 +1638,8 @@ tests.pingpong = <span class="hljs-function"><span class="hljs-keyword">function
         <li id="section-63">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-63">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-63">&#x00a7;</a>
               </div>
               <p>We’ve used blocks to represent the code that processes should run.  So far,
 so good. If we want to expand the reach of processes to cover running them
@@ -1671,23 +1671,23 @@ or not.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-<span class="hljs-keyword">let</span> copy_bindings_for_block = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">block, env, dest</span>) </span>{
-    <span class="hljs-keyword">let</span> scan = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">instructions</span>) </span>{
-        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; instructions.length; ++i) {
+<span class="hljs-keyword">let</span> copy_bindings_for_block = <span class="hljs-keyword">function</span> (<span class="hljs-params">block, env, dest</span>) {
+    <span class="hljs-keyword">let</span> scan = <span class="hljs-keyword">function</span> (<span class="hljs-params">instructions</span>) {
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; instructions.<span class="hljs-property">length</span>; ++i) {
             <span class="hljs-keyword">let</span> word = instructions[i];
-            <span class="hljs-keyword">if</span> (word.t === <span class="hljs-string">'word'</span>) {
-                <span class="hljs-keyword">let</span> val = lookup(env, word); 
+            <span class="hljs-keyword">if</span> (word.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;word&#x27;</span>) {
+                <span class="hljs-keyword">let</span> val = <span class="hljs-title function_">lookup</span>(env, word); 
                 <span class="hljs-keyword">if</span> (val) {
-                    dest[word.v] = val;
+                    dest[word.<span class="hljs-property">v</span>] = val;
                 }
-            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (word.t === <span class="hljs-string">'block'</span>) {
-                scan(word.v);
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (word.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>) {
+                <span class="hljs-title function_">scan</span>(word.<span class="hljs-property">v</span>);
             }
         }
     };
 
-    scan(block.v);
-    dest[<span class="hljs-string">'self'</span>] = block; <span class="hljs-comment">// The word "self" refers to the block itself within the block.</span>
+    <span class="hljs-title function_">scan</span>(block.<span class="hljs-property">v</span>);
+    dest[<span class="hljs-string">&#x27;self&#x27;</span>] = block; <span class="hljs-comment">// The word &quot;self&quot; refers to the block itself within the block.</span>
     <span class="hljs-keyword">return</span> dest;
 };</pre></div></div>
             
@@ -1697,8 +1697,8 @@ or not.</p>
         <li id="section-64">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-64">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-64">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Question</strong>: Scrutinize the above heuristic for determining what
@@ -1710,35 +1710,35 @@ fewer bindings than necessary?</p>
             </div>
             
             <div class="content"><div class='highlight'><pre> 
-run = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack, callback</span>) </span>{
-    <span class="hljs-keyword">if</span> (!stack.process) {
-        stack.process = process(env, block(program));
+run = <span class="hljs-keyword">function</span> (<span class="hljs-params">env, program, pc, stack, callback</span>) {
+    <span class="hljs-keyword">if</span> (!stack.<span class="hljs-property">process</span>) {
+        stack.<span class="hljs-property">process</span> = <span class="hljs-title function_">process</span>(env, <span class="hljs-title function_">block</span>(program));
     }
 
-    <span class="hljs-keyword">for</span> (; pc &lt; program.length; ++pc) {
+    <span class="hljs-keyword">for</span> (; pc &lt; program.<span class="hljs-property">length</span>; ++pc) {
         <span class="hljs-keyword">let</span> instr = program[pc];
  
-        <span class="hljs-keyword">if</span> (instr.t === <span class="hljs-string">'word'</span>) {
-            <span class="hljs-keyword">let</span> deref = lookup(env, instr);
+        <span class="hljs-keyword">if</span> (instr.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;word&#x27;</span>) {
+            <span class="hljs-keyword">let</span> deref = <span class="hljs-title function_">lookup</span>(env, instr);
             <span class="hljs-keyword">if</span> (!deref) {
-                <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Undefined word "'</span> + instr.v + <span class="hljs-string">'" at instruction '</span> + pc);
+                <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;Undefined word &quot;&#x27;</span> + instr.<span class="hljs-property">v</span> + <span class="hljs-string">&#x27;&quot; at instruction &#x27;</span> + pc);
             }
             instr = deref;
         }
 
-        <span class="hljs-keyword">switch</span> (instr.t) {
-            <span class="hljs-keyword">case</span> <span class="hljs-string">'prim'</span>:
-                <span class="hljs-keyword">if</span> (callback &amp;&amp; instr.v.length === <span class="hljs-number">3</span>) {
-                    <span class="hljs-keyword">return</span> apply(env, instr, stack, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-                        <span class="hljs-keyword">return</span> run(env, program, pc+<span class="hljs-number">1</span>, stack, callback);
+        <span class="hljs-keyword">switch</span> (instr.<span class="hljs-property">t</span>) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;prim&#x27;</span>:
+                <span class="hljs-keyword">if</span> (callback &amp;&amp; instr.<span class="hljs-property">v</span>.<span class="hljs-property">length</span> === <span class="hljs-number">3</span>) {
+                    <span class="hljs-keyword">return</span> <span class="hljs-title function_">apply</span>(env, instr, stack, <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+                        <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(env, program, pc+<span class="hljs-number">1</span>, stack, callback);
                     });
                 } <span class="hljs-keyword">else</span> {
-                    stack = apply(env, instr, stack);
+                    stack = <span class="hljs-title function_">apply</span>(env, instr, stack);
                     <span class="hljs-keyword">break</span>;
                 }
 
-            <span class="hljs-keyword">case</span> <span class="hljs-string">'block'</span>:
-                <span class="hljs-keyword">let</span> bound_block = block(instr.v);</pre></div></div>
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;block&#x27;</span>:
+                <span class="hljs-keyword">let</span> bound_block = <span class="hljs-title function_">block</span>(instr.<span class="hljs-property">v</span>);</pre></div></div>
             
         </li>
         
@@ -1746,8 +1746,8 @@ run = <span class="hljs-function"><span class="hljs-keyword">function</span> (<s
         <li id="section-65">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-65">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-65">&#x00a7;</a>
               </div>
               <p>We use <code>copy_bindings_for_block</code> instead of the earlier <code>copy_bindings</code>
 implementation. With this implementation, notice that the <code>[[parent]]</code>
@@ -1758,8 +1758,8 @@ reuse blocks to describe processes.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>                bound_block.bindings = instr.bindings || copy_bindings_for_block(bound_block, env, {});
-                push(stack, bound_block);
+            <div class="content"><div class='highlight'><pre>                bound_block.<span class="hljs-property">bindings</span> = instr.<span class="hljs-property">bindings</span> || <span class="hljs-title function_">copy_bindings_for_block</span>(bound_block, env, {});
+                <span class="hljs-title function_">push</span>(stack, bound_block);
                 <span class="hljs-keyword">break</span>;</pre></div></div>
             
         </li>
@@ -1768,21 +1768,21 @@ reuse blocks to describe processes.</p>
         <li id="section-66">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-66">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-66">&#x00a7;</a>
               </div>
               <p>In all other cases we just store the value on the stack.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">default</span>:
-                push(stack, instr);
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-attr">default</span>:
+                <span class="hljs-title function_">push</span>(stack, instr);
                 <span class="hljs-keyword">break</span>;
         }
     }
 
     <span class="hljs-keyword">if</span> (callback) {
-        <span class="hljs-keyword">return</span> later(callback, stack);
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, stack);
     }
 
     <span class="hljs-keyword">return</span> stack;
@@ -1794,8 +1794,8 @@ reuse blocks to describe processes.</p>
         <li id="section-67">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-67">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-67">&#x00a7;</a>
               </div>
               <p>We have to now examine the impact of this change on how we’re spawning
 processes - using our <code>go</code> primitive. <code>go</code> currently copies the environment
@@ -1808,10 +1808,10 @@ isolation”.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
-    define(env, <span class="hljs-string">'go'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> code = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(code.t === <span class="hljs-string">'block'</span>);</pre></div></div>
+<span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;go&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> code = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(code.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);</pre></div></div>
             
         </li>
         
@@ -1819,8 +1819,8 @@ stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (
         <li id="section-68">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-68">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-68">&#x00a7;</a>
               </div>
               <p>When spawning off a new process, we don’t want the process to clobber the
 parent environment or stack. So we create a <em>fresh</em> environment and store
@@ -1835,9 +1835,9 @@ single hash.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-        <span class="hljs-keyword">let</span> env2 = mk_env();
-        copy_bindings(code.bindings, current_bindings(env2));
-        enter(env2);</pre></div></div>
+        <span class="hljs-keyword">let</span> env2 = <span class="hljs-title function_">mk_env</span>();
+        <span class="hljs-title function_">copy_bindings</span>(code.<span class="hljs-property">bindings</span>, <span class="hljs-title function_">current_bindings</span>(env2));
+        <span class="hljs-title function_">enter</span>(env2);</pre></div></div>
             
         </li>
         
@@ -1845,8 +1845,8 @@ single hash.</p>
         <li id="section-69">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-69">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-69">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Question</strong>: What are the implications of this choice from the perspective
@@ -1858,7 +1858,7 @@ with this implementation that was possible before, for example?</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-        <span class="hljs-keyword">let</span> proc = process(env2, code);</pre></div></div>
+        <span class="hljs-keyword">let</span> proc = <span class="hljs-title function_">process</span>(env2, code);</pre></div></div>
             
         </li>
         
@@ -1866,29 +1866,29 @@ with this implementation that was possible before, for example?</p>
         <li id="section-70">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-70">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-70">&#x00a7;</a>
               </div>
               <p>The rest remains the same.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">let</span> new_stack = [stack.process, proc];
-        new_stack.process = proc;
-        <span class="hljs-keyword">return</span> later(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">let</span> new_stack = [stack.<span class="hljs-property">process</span>, proc];
+        new_stack.<span class="hljs-property">process</span> = proc;
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
             <span class="hljs-keyword">let</span> env = env2;
-            run(env, code.v, <span class="hljs-number">0</span>, new_stack, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-                leave(env);
-                proc.state = <span class="hljs-string">'done'</span>;
-                proc.result = pop(stack);
-                <span class="hljs-keyword">if</span> (proc.notify) {
-                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; proc.notify.length; ++i) {
-                        proc.notify[i](proc.result);
+            <span class="hljs-title function_">run</span>(env, code.<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, new_stack, <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+                <span class="hljs-title function_">leave</span>(env);
+                proc.<span class="hljs-property">state</span> = <span class="hljs-string">&#x27;done&#x27;</span>;
+                proc.<span class="hljs-property">result</span> = <span class="hljs-title function_">pop</span>(stack);
+                <span class="hljs-keyword">if</span> (proc.<span class="hljs-property">notify</span>) {
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; proc.<span class="hljs-property">notify</span>.<span class="hljs-property">length</span>; ++i) {
+                        proc.<span class="hljs-property">notify</span>[i](proc.<span class="hljs-property">result</span>);
                     }
-                    proc.notify = [];
+                    proc.<span class="hljs-property">notify</span> = [];
                 }
             });
-        }, push(stack, proc));
+        }, <span class="hljs-title function_">push</span>(stack, proc));
     }));
 });</pre></div></div>
             
@@ -1898,8 +1898,8 @@ with this implementation that was possible before, for example?</p>
         <li id="section-71">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-71">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-71">&#x00a7;</a>
               </div>
               <p>One thing to notice with this new notion of capturing the bindings
 relevant to a block is that we can now simplify our implementation 
@@ -1909,33 +1909,33 @@ a single chain of scopes.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-mk_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">base</span>) </span>{ <span class="hljs-keyword">return</span> { <span class="hljs-attr">t</span>: <span class="hljs-string">'env'</span>, <span class="hljs-attr">v</span>: { <span class="hljs-attr">env</span>: {}, <span class="hljs-attr">base</span>: base &amp;&amp; base.v } }; };
+mk_env = <span class="hljs-keyword">function</span> (<span class="hljs-params">base</span>) { <span class="hljs-keyword">return</span> { <span class="hljs-attr">t</span>: <span class="hljs-string">&#x27;env&#x27;</span>, <span class="hljs-attr">v</span>: { <span class="hljs-attr">env</span>: {}, <span class="hljs-attr">base</span>: base &amp;&amp; base.<span class="hljs-property">v</span> } }; };
 
-lookup = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, word</span>) </span>{
-    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> scope = env.v; scope; scope = scope.base) {
-        <span class="hljs-keyword">let</span> val = scope.env[word.v];
+lookup = <span class="hljs-keyword">function</span> (<span class="hljs-params">env, word</span>) {
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> scope = env.<span class="hljs-property">v</span>; scope; scope = scope.<span class="hljs-property">base</span>) {
+        <span class="hljs-keyword">let</span> val = scope.<span class="hljs-property">env</span>[word.<span class="hljs-property">v</span>];
         <span class="hljs-keyword">if</span> (val) { <span class="hljs-keyword">return</span> val; }
     }
     <span class="hljs-keyword">return</span> <span class="hljs-literal">undefined</span>;
 };
 
-define = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, key, value</span>) </span>{
-    env.v.env[key] = value;
+define = <span class="hljs-keyword">function</span> (<span class="hljs-params">env, key, value</span>) {
+    env.<span class="hljs-property">v</span>.<span class="hljs-property">env</span>[key] = value;
     <span class="hljs-keyword">return</span> env;
 };
 
-enter = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
-    env.v = { <span class="hljs-attr">env</span>: {}, <span class="hljs-attr">base</span>: env.v };
+enter = <span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {
+    env.<span class="hljs-property">v</span> = { <span class="hljs-attr">env</span>: {}, <span class="hljs-attr">base</span>: env.<span class="hljs-property">v</span> };
     <span class="hljs-keyword">return</span> env;
 };
 
-leave = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
-    env.v = env.v.base;
+leave = <span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {
+    env.<span class="hljs-property">v</span> = env.<span class="hljs-property">v</span>.<span class="hljs-property">base</span>;
     <span class="hljs-keyword">return</span> env;
 };
 
-current_bindings = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
-    <span class="hljs-keyword">return</span> env.v.env;
+current_bindings = <span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {
+    <span class="hljs-keyword">return</span> env.<span class="hljs-property">v</span>.<span class="hljs-property">env</span>;
 };</pre></div></div>
             
         </li>
@@ -1944,8 +1944,8 @@ current_bindings = <span class="hljs-function"><span class="hljs-keyword">functi
         <li id="section-72">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-72">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-72">&#x00a7;</a>
               </div>
               <h2 id="data-flow-variables">Data flow variables</h2>
 
@@ -1957,8 +1957,8 @@ current_bindings = <span class="hljs-function"><span class="hljs-keyword">functi
         <li id="section-73">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-73">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-73">&#x00a7;</a>
               </div>
               <p>Mutexes, semaphores and critical sections are common ways in which systems
 programming languages deal with concurrency control. Recently, <a href="https://en.wikipedia.org/wiki/Futures_and_promises">promises and futures</a>
@@ -1977,8 +1977,8 @@ by synchronizing on such dataflow variables. </p>
         <li id="section-74">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-74">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-74">&#x00a7;</a>
               </div>
               <p>Let’s try to model these in slang by introducing a new type for dataflow
 variables. With each <code>dfvar</code>, we need to store a list of callbacks to
@@ -1989,30 +1989,30 @@ purposes.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-<span class="hljs-keyword">let</span> dfvar = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">name</span>) </span>{ 
-    <span class="hljs-keyword">return</span> { <span class="hljs-attr">t</span>: <span class="hljs-string">'dfvar'</span>, <span class="hljs-attr">v</span>: <span class="hljs-literal">undefined</span>, <span class="hljs-attr">name</span>: name, <span class="hljs-attr">bound</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">resume</span>: [] };
+<span class="hljs-keyword">let</span> dfvar = <span class="hljs-keyword">function</span> (<span class="hljs-params">name</span>) { 
+    <span class="hljs-keyword">return</span> { <span class="hljs-attr">t</span>: <span class="hljs-string">&#x27;dfvar&#x27;</span>, <span class="hljs-attr">v</span>: <span class="hljs-literal">undefined</span>, <span class="hljs-attr">name</span>: name, <span class="hljs-attr">bound</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">resume</span>: [] };
 };
 
-<span class="hljs-keyword">let</span> df_is_bound = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">dfv</span>) </span>{ <span class="hljs-keyword">return</span> dfv.bound; };
+<span class="hljs-keyword">let</span> df_is_bound = <span class="hljs-keyword">function</span> (<span class="hljs-params">dfv</span>) { <span class="hljs-keyword">return</span> dfv.<span class="hljs-property">bound</span>; };
 
-<span class="hljs-keyword">let</span> df_bind = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">dfv, val</span>) </span>{
-    <span class="hljs-keyword">if</span> (!dfv.bound) {
-        dfv.v = val;
-        dfv.bound = <span class="hljs-literal">true</span>;
+<span class="hljs-keyword">let</span> df_bind = <span class="hljs-keyword">function</span> (<span class="hljs-params">dfv, val</span>) {
+    <span class="hljs-keyword">if</span> (!dfv.<span class="hljs-property">bound</span>) {
+        dfv.<span class="hljs-property">v</span> = val;
+        dfv.<span class="hljs-property">bound</span> = <span class="hljs-literal">true</span>;
     }
-    <span class="hljs-keyword">while</span> (dfv.resume.length &gt; <span class="hljs-number">0</span>) {
-        <span class="hljs-keyword">let</span> fn = dfv.resume.shift();
-        later(fn, dfv.v);
+    <span class="hljs-keyword">while</span> (dfv.<span class="hljs-property">resume</span>.<span class="hljs-property">length</span> &gt; <span class="hljs-number">0</span>) {
+        <span class="hljs-keyword">let</span> fn = dfv.<span class="hljs-property">resume</span>.<span class="hljs-title function_">shift</span>();
+        <span class="hljs-title function_">later</span>(fn, dfv.<span class="hljs-property">v</span>);
     }
-    <span class="hljs-keyword">return</span> dfv.v;
+    <span class="hljs-keyword">return</span> dfv.<span class="hljs-property">v</span>;
 };
 
-<span class="hljs-keyword">let</span> df_val = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">dfv, callback</span>) </span>{
-    <span class="hljs-keyword">if</span> (dfv.bound) {
-        <span class="hljs-keyword">return</span> later(callback, dfv.v);
+<span class="hljs-keyword">let</span> df_val = <span class="hljs-keyword">function</span> (<span class="hljs-params">dfv, callback</span>) {
+    <span class="hljs-keyword">if</span> (dfv.<span class="hljs-property">bound</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, dfv.<span class="hljs-property">v</span>);
     }
 
-    dfv.resume.push(callback);
+    dfv.<span class="hljs-property">resume</span>.<span class="hljs-title function_">push</span>(callback);
     <span class="hljs-keyword">return</span> dfv;
 };</pre></div></div>
             
@@ -2022,8 +2022,8 @@ purposes.</p>
         <li id="section-75">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-75">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-75">&#x00a7;</a>
               </div>
               <p>When a process tries to access the value of a dataflow variable that is not
 bound, it must suspend until it gets a value. We do this via the traditional
@@ -2037,8 +2037,8 @@ bound, it must suspend until it gets a value. We do this via the traditional
         <li id="section-76">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-76">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-76">&#x00a7;</a>
               </div>
               <p>We of course need a way for a process to bind an unbound dataflow variable
 with a value. We must insist that we do this only for unbound variables, or
@@ -2061,22 +2061,22 @@ we permit bindings for already bound dataflow variables?</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
-    define(env, <span class="hljs-string">'dfvar'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> sym = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(sym.t === <span class="hljs-string">'symbol'</span>);
-        define(env, sym.v, dfvar(sym));
+<span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;dfvar&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> sym = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(sym.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;symbol&#x27;</span>);
+        <span class="hljs-title function_">define</span>(env, sym.<span class="hljs-property">v</span>, <span class="hljs-title function_">dfvar</span>(sym));
         <span class="hljs-keyword">return</span> stack;
     }));
 
-    define(env, <span class="hljs-string">'def'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> sym = pop(stack), val = pop(stack);
-        <span class="hljs-keyword">switch</span> (sym.t) {
-            <span class="hljs-keyword">case</span> <span class="hljs-string">'symbol'</span>:
-                define(env, sym.v, val);
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;def&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> sym = <span class="hljs-title function_">pop</span>(stack), val = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-keyword">switch</span> (sym.<span class="hljs-property">t</span>) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;symbol&#x27;</span>:
+                <span class="hljs-title function_">define</span>(env, sym.<span class="hljs-property">v</span>, val);
                 <span class="hljs-keyword">break</span>;
-            <span class="hljs-keyword">case</span> <span class="hljs-string">'dfvar'</span>:
-                df_bind(sym, val);</pre></div></div>
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;dfvar&#x27;</span>:
+                <span class="hljs-title function_">df_bind</span>(sym, val);</pre></div></div>
             
         </li>
         
@@ -2084,8 +2084,8 @@ stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (
         <li id="section-77">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-77">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-77">&#x00a7;</a>
               </div>
               <p>TODO: Note that we must fail in this case if the new value
 is not the same as an already bound value if that was the case.</p>
@@ -2093,32 +2093,32 @@ is not the same as an already bound value if that was the case.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">break</span>;
-            <span class="hljs-keyword">default</span>:
-                <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Unsupported binding type '</span> + sym.t);
+            <span class="hljs-attr">default</span>:
+                <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;Unsupported binding type &#x27;</span> + sym.<span class="hljs-property">t</span>);
         }
         <span class="hljs-keyword">return</span> stack;
     }));
 
-    define(env, <span class="hljs-string">'await'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> proc = pop(stack);
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;await&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">let</span> proc = <span class="hljs-title function_">pop</span>(stack);
 
-        <span class="hljs-keyword">if</span> (proc.t === <span class="hljs-string">'dfvar'</span>) {
-            <span class="hljs-built_in">console</span>.assert(callback);
-            df_val(proc, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">val</span>) </span>{
-                callback(push(stack, val));
+        <span class="hljs-keyword">if</span> (proc.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;dfvar&#x27;</span>) {
+            <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(callback);
+            <span class="hljs-title function_">df_val</span>(proc, <span class="hljs-keyword">function</span> (<span class="hljs-params">val</span>) {
+                <span class="hljs-title function_">callback</span>(<span class="hljs-title function_">push</span>(stack, val));
             });
             <span class="hljs-keyword">return</span> stack;
         }
 
-        <span class="hljs-built_in">console</span>.assert(proc.t === <span class="hljs-string">'process'</span>);
-        <span class="hljs-built_in">console</span>.assert(callback);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(proc.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;process&#x27;</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(callback);
 
-        <span class="hljs-keyword">if</span> (proc.state === <span class="hljs-string">'done'</span>) {
-            <span class="hljs-keyword">return</span> later(callback, push(stack, proc.result));
+        <span class="hljs-keyword">if</span> (proc.<span class="hljs-property">state</span> === <span class="hljs-string">&#x27;done&#x27;</span>) {
+            <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, <span class="hljs-title function_">push</span>(stack, proc.<span class="hljs-property">result</span>));
         }
 
-        proc.notify.push(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">result</span>) </span>{
-            later(callback, push(stack, result));
+        proc.<span class="hljs-property">notify</span>.<span class="hljs-title function_">push</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">result</span>) {
+            <span class="hljs-title function_">later</span>(callback, <span class="hljs-title function_">push</span>(stack, result));
         });</pre></div></div>
             
         </li>
@@ -2127,8 +2127,8 @@ is not the same as an already bound value if that was the case.</p>
         <li id="section-78">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-78">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-78">&#x00a7;</a>
               </div>
               <p>Return value will be discarded in the async case anyway.</p>
 
@@ -2138,17 +2138,17 @@ is not the same as an already bound value if that was the case.</p>
     }));    
 });
 
-tests.dfvar = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-    <span class="hljs-keyword">let</span> program = parse_slang(<span class="hljs-string">`
-        "We'll use a convention that capital letters indicate dfvars";
+tests.<span class="hljs-property">dfvar</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+    <span class="hljs-keyword">let</span> program = <span class="hljs-title function_">parse_slang</span>(<span class="hljs-string">`
+        &quot;We&#x27;ll use a convention that capital letters indicate dfvars&quot;;
         :X dfvar
         [ 5000 after 42 X def ] go
-        "Waiting for X" print
+        &quot;Waiting for X&quot; print
         X await print
     `</span>);
 
-    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"done"</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(<span class="hljs-title function_">test_env</span>(), program, <span class="hljs-number">0</span>, [], <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;done&quot;</span>);
     });
 };</pre></div></div>
             
@@ -2158,8 +2158,8 @@ tests.dfvar = <span class="hljs-function"><span class="hljs-keyword">function</s
         <li id="section-79">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-79">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-79">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Question</strong>: What do we have to do to implement dataflow
@@ -2177,8 +2177,8 @@ that await their values only when requested?</p>
         <li id="section-80">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-80">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-80">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Question</strong>: Supposing a dfvar never gets bound and a process
@@ -2195,54 +2195,54 @@ such a thing happens?</p>
         <li id="section-81">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-81">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-81">&#x00a7;</a>
               </div>
               <h2 id="tests">Tests</h2>
 <h3 id="test-prime-number-sieve">Test prime number sieve</h3>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>tests.primesieve = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) </span>{
-    <span class="hljs-keyword">let</span> program = parse_slang(<span class="hljs-string">`
-        [n] args                "We stop when we reach n";
+            <div class="content"><div class='highlight'><pre>tests.<span class="hljs-property">primesieve</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) {
+    <span class="hljs-keyword">let</span> program = <span class="hljs-title function_">parse_slang</span>(<span class="hljs-string">`
+        [n] args                &quot;We stop when we reach n&quot;;
 
-        "We spawn one sieve process for each prime number we
+        &quot;We spawn one sieve process for each prime number we
          find. Each sieve process filters out the factors of
          that prime number and pipes its output to the higher
-         prime processes.";
+         prime processes.&quot;;
 
-        [ receive :prime def    "The first number we get is prime";
+        [ receive :prime def    &quot;The first number we get is prime&quot;;
           prime print
-          self go :filter def   "Launch another filter process for
-                                 the next prime";
+          self go :filter def   &quot;Launch another filter process for
+                                 the next prime&quot;;
 
-          "Sieve out all factors of our prime and send it to
-           the next sieve process";
+          &quot;Sieve out all factors of our prime and send it to
+           the next sieve process&quot;;
 
           [ self :loop def
-            receive :i def      "i will not have any factors &lt; prime";
+            receive :i def      &quot;i will not have any factors &lt; prime&quot;;
             i prime remainder 0 != [ filter i post ] if
 
             i n &lt; [ loop do ] if
           ] do
         ] :sieve def
 
-        sieve go :main def      "Start the first sieve";
+        sieve go :main def      &quot;Start the first sieve&quot;;
         
-        "Generate 2,3,4,5,... into the first sieve";
+        &quot;Generate 2,3,4,5,... into the first sieve&quot;;
         [ [i target] args
           self :gen def
           target i post
-          yield                 "Necessary for async generation";
+          yield                 &quot;Necessary for async generation&quot;;
           i n &lt; [i 1 + target gen do] if
         ] :generate defun
 
         2 main generate
     `</span>);
 
-    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [number(n)], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"done"</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(<span class="hljs-title function_">test_env</span>(), program, <span class="hljs-number">0</span>, [<span class="hljs-title function_">number</span>(n)], <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;done&quot;</span>);
     });
 };</pre></div></div>
             
@@ -2252,25 +2252,25 @@ such a thing happens?</p>
         <li id="section-82">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-82">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-82">&#x00a7;</a>
               </div>
               <h3 id="math-primitives-needed-for-prime-sieve">Math primitives needed for prime sieve</h3>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>
-stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{
-    define(env, <span class="hljs-string">'remainder'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> den = pop(stack), num = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(den.t === <span class="hljs-string">'number'</span> &amp;&amp; num.t === <span class="hljs-string">'number'</span>);
-        <span class="hljs-keyword">return</span> push(stack, number(num.v % den.v));
+<span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;remainder&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> den = <span class="hljs-title function_">pop</span>(stack), num = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(den.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;number&#x27;</span> &amp;&amp; num.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;number&#x27;</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">push</span>(stack, <span class="hljs-title function_">number</span>(num.<span class="hljs-property">v</span> % den.<span class="hljs-property">v</span>));
     }));
 
-    define(env, <span class="hljs-string">'quotient'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> den = pop(stack), num = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(den.t === <span class="hljs-string">'number'</span> &amp;&amp; num.t === <span class="hljs-string">'number'</span>);
-        <span class="hljs-keyword">return</span> push(stack, number(<span class="hljs-built_in">Math</span>.floor(num.v / den.v)));
+    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;quotient&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> den = <span class="hljs-title function_">pop</span>(stack), num = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(den.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;number&#x27;</span> &amp;&amp; num.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;number&#x27;</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">push</span>(stack, <span class="hljs-title function_">number</span>(<span class="hljs-title class_">Math</span>.<span class="hljs-title function_">floor</span>(num.<span class="hljs-property">v</span> / den.<span class="hljs-property">v</span>)));
     }));
 });</pre></div></div>
             

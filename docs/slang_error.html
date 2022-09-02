@@ -86,8 +86,8 @@
         <li id="section-1">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-1">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-1">&#x00a7;</a>
               </div>
               
             </div>
@@ -98,8 +98,8 @@
         <li id="section-2">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-2">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-2">&#x00a7;</a>
               </div>
               <h1 id="error-conditions">Error conditions</h1>
 
@@ -111,8 +111,8 @@
         <li id="section-3">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-3">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Date</strong>: 26 April 2017<br><strong>Note</strong>: DRAFT MODE. This section is INCOMPLETE.</p>
@@ -126,8 +126,8 @@
         <li id="section-4">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-4">&#x00a7;</a>
               </div>
               <p>Requires <code>slang_nondet.js</code> and everything else it requires.</p>
 
@@ -139,8 +139,8 @@
         <li id="section-5">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-5">&#x00a7;</a>
               </div>
               <p>In the section on “non-deterministic programming”, we saw how the <code>choose</code>
 and <code>fail</code> operators can cooperate to implement a depth-first search of a
@@ -161,10 +161,10 @@ the rationale for each.</p>
         <li id="section-6">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-6">&#x00a7;</a>
               </div>
-              <h2 id="what-is-an-error-condition-">What is an error condition?</h2>
+              <h2 id="what-is-an-error-condition">What is an error condition?</h2>
 
             </div>
             
@@ -174,8 +174,8 @@ the rationale for each.</p>
         <li id="section-7">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-7">&#x00a7;</a>
               </div>
               <p>At the basic level, an error condition occurs when a function is unable to
 return a value that will continue the flow of the program. It can express
@@ -203,8 +203,8 @@ behaviour embedded into applications.</p>
         <li id="section-8">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-8">&#x00a7;</a>
               </div>
               <h2 id="encoding-errors-in-values">Encoding errors in values</h2>
 
@@ -216,8 +216,8 @@ behaviour embedded into applications.</p>
         <li id="section-9">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-9">&#x00a7;</a>
               </div>
               <p>The simplest approach that a function or procedure can take to signal an
 error condition is to encode the error condition as a special return value.
@@ -227,16 +227,16 @@ detailed context about the error so that appropriate action can be taken.</p>
 returning an error code and expecting the caller to detect the condition
 and take corrective action if possible. </p>
 <p>Below is a simple example in the C language.</p>
-<pre><code class="lang-c"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *message, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *filename)</span> </span>{
-    FILE *f = fopen(filename, <span class="hljs-string">"w"</span>);
+<pre><code class="language-c"><span class="hljs-type">int</span> <span class="hljs-title function_">write_to_file</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *message, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *filename)</span> {
+    FILE *f = fopen(filename, <span class="hljs-string">&quot;w&quot;</span>);
     <span class="hljs-keyword">if</span> (f != <span class="hljs-literal">NULL</span>) {
         <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>; <span class="hljs-comment">// Nothing written.</span>
     }
 
-    <span class="hljs-built_in">fprintf</span>(f, <span class="hljs-string">"%s"</span>, message);
+    <span class="hljs-built_in">fprintf</span>(f, <span class="hljs-string">&quot;%s&quot;</span>, message);
     fclose(f);
     <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
-}
+}   
 </code></pre>
 <p>The idea of returning special error codes is also a common feature of
 languages featuring a strict type system, such as Haskell and Rust,
@@ -244,7 +244,7 @@ which feature <code>Option</code> or <code>Maybe</code> and <code>Result</code> 
 Below is a trivial example of calculating the width in pixels of each 
 column when the total width of all columns and the number of columns
 are known.</p>
-<pre><code class="lang-hs"><span class="hljs-title">columnSize</span> : <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span>
+<pre><code class="language-hs"><span class="hljs-title">columnSize</span> : <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span>
 <span class="hljs-title">columnSize</span> width numColumns =
     <span class="hljs-keyword">if</span> numColumns == <span class="hljs-number">0</span> <span class="hljs-keyword">then</span>
         <span class="hljs-type">Nothing</span>
@@ -256,10 +256,10 @@ the odd situation of no columns, and give <code>Just width</code> when presented
 a valid situation. In this case, we didn’t need any further explanation
 for the error condition perhaps. If we needed that, we could’ve used an
 <code>Either</code> type as follows –</p>
-<pre><code class="lang-hs"><span class="hljs-title">columnSize</span> : <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Either</span> <span class="hljs-type">String</span> <span class="hljs-type">Int</span>
+<pre><code class="language-hs"><span class="hljs-title">columnSize</span> : <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Either</span> <span class="hljs-type">String</span> <span class="hljs-type">Int</span>
 <span class="hljs-title">columnSize</span> width numColumns =
     <span class="hljs-keyword">if</span> numColumns == <span class="hljs-number">0</span> <span class="hljs-keyword">then</span>
-        <span class="hljs-type">Left</span> <span class="hljs-string">"Can't give 0 columns"</span>
+        <span class="hljs-type">Left</span> <span class="hljs-string">&quot;Can&#x27;t give 0 columns&quot;</span>
     <span class="hljs-keyword">else</span>
         <span class="hljs-type">Right</span> (width `div` numColumns)
 </code></pre>
@@ -277,8 +277,8 @@ to some piece of code which know what to do with it.</p>
         <li id="section-10">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-10">&#x00a7;</a>
               </div>
               <h2 id="errors-at-the-system-level">Errors at the system level</h2>
 
@@ -290,8 +290,8 @@ to some piece of code which know what to do with it.</p>
         <li id="section-11">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-11">&#x00a7;</a>
               </div>
               <p>Most of our programs are launched by the OS kernel as processes which get
 their own address space. Since the kernel is expected to manage the resources
@@ -315,8 +315,8 @@ into processes externally.</p>
         <li id="section-12">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-12">&#x00a7;</a>
               </div>
               <h2 id="try-catch-based-error-management">try-catch based error management</h2>
 
@@ -328,47 +328,47 @@ into processes externally.</p>
         <li id="section-13">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-13">&#x00a7;</a>
               </div>
               <p>In languages such as Java, Javascript and C++, we can mark a piece of code
 as “error prone” by wrapping it inside a <code>try</code> block, with a <code>catch</code> clause
 specifying code to execute when error conditions occur. Some mock code -</p>
-<pre><code class="lang-cpp"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *message, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *filename)</span> </span>{
+<pre><code class="language-cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *message, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *filename)</span> </span>{
     File *f = <span class="hljs-literal">NULL</span>;
 
     <span class="hljs-keyword">try</span> {
-        FILE *f = fopen(filename, <span class="hljs-string">"w"</span>);
+        FILE *f = <span class="hljs-built_in">fopen</span>(filename, <span class="hljs-string">&quot;w&quot;</span>);
         <span class="hljs-keyword">if</span> (f == <span class="hljs-literal">NULL</span>) { <span class="hljs-keyword">throw</span> <span class="hljs-number">-1</span>; }
         <span class="hljs-keyword">if</span> (<span class="hljs-built_in">strlen</span>(message) &gt; <span class="hljs-number">100</span>) {
             <span class="hljs-keyword">throw</span> <span class="hljs-number">-2</span>;
         }
-        <span class="hljs-built_in">fprintf</span>(f, <span class="hljs-string">"%s"</span>, message);
-        fclose(f);
+        <span class="hljs-built_in">fprintf</span>(f, <span class="hljs-string">&quot;%s&quot;</span>, message);
+        <span class="hljs-built_in">fclose</span>(f);
         <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
-    } <span class="hljs-keyword">catch</span> (<span class="hljs-keyword">int</span> e) {
-        fclose(f);
+    } <span class="hljs-built_in">catch</span> (<span class="hljs-type">int</span> e) {
+        <span class="hljs-built_in">fclose</span>(f);
         <span class="hljs-keyword">return</span> e;
     }
-}
+}   
 </code></pre>
 <p>If the double <code>fclose</code> is bothering you as it should, you can use the <code>finally</code> clause
 to release resources whether the function succeeds or fails.</p>
-<pre><code class="lang-cpp"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *message, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *filename)</span> </span>{
+<pre><code class="language-cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *message, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *filename)</span> </span>{
     File *f = <span class="hljs-literal">NULL</span>;
 
     <span class="hljs-keyword">try</span> {
-        FILE *f = fopen(filename, <span class="hljs-string">"w"</span>);
+        FILE *f = <span class="hljs-built_in">fopen</span>(filename, <span class="hljs-string">&quot;w&quot;</span>);
         <span class="hljs-keyword">if</span> (f == <span class="hljs-literal">NULL</span>) { <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>; }
         <span class="hljs-keyword">if</span> (<span class="hljs-built_in">strlen</span>(message) &gt; <span class="hljs-number">100</span>) {
             <span class="hljs-keyword">return</span> <span class="hljs-number">-2</span>;
         }
-        <span class="hljs-built_in">fprintf</span>(f, <span class="hljs-string">"%s"</span>, message);
+        <span class="hljs-built_in">fprintf</span>(f, <span class="hljs-string">&quot;%s&quot;</span>, message);
         <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
     } finally {
-        fclose(f);
+        <span class="hljs-built_in">fclose</span>(f);
     }
-}
+}   
 </code></pre>
 <p>Such a <code>finally</code> clause is used in these languages to specify code that must be
 executed irrespective of whether the procedure returns normally or via some abnormal
@@ -382,10 +382,10 @@ means such as an exception thrown using <code>throw</code>.</p>
         <li id="section-14">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-14">&#x00a7;</a>
               </div>
-              <h2 id="resource-acquisition-as-initialization-raai-">Resource Acquisition As Initialization (RAAI)</h2>
+              <h2 id="resource-acquisition-as-initialization-raai">Resource Acquisition As Initialization (RAAI)</h2>
 
             </div>
             
@@ -395,8 +395,8 @@ means such as an exception thrown using <code>throw</code>.</p>
         <li id="section-15">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-15">&#x00a7;</a>
               </div>
               <p>As we saw, resource cleanup is one of the important actions to be taken when
 errors happen. The above ways of testing for error conditions and managing
@@ -415,12 +415,12 @@ objects are called in the reverse allocation sequence automatically.</p>
 <p>So what we have to do is to model resources as objects that can be allocated
 on the stack, and put in their cleanup code within the destructors of the
 classes of these objects. For example -</p>
-<pre><code class="lang-cpp"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span> &amp;filename, <span class="hljs-keyword">const</span> <span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span> &amp;message)</span> </span>{
-    <span class="hljs-built_in">std</span>::<span class="hljs-function">ostream <span class="hljs-title">file</span><span class="hljs-params">(filename)</span></span>;
-    <span class="hljs-keyword">if</span> (message.length() &gt; <span class="hljs-number">100</span>) {
-        <span class="hljs-keyword">throw</span> <span class="hljs-built_in">std</span>::error(<span class="hljs-string">"Message too big"</span>);
+<pre><code class="language-cpp"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">write_to_file</span><span class="hljs-params">(<span class="hljs-type">const</span> std::string &amp;filename, <span class="hljs-type">const</span> std::string &amp;message)</span> </span>{
+    <span class="hljs-function">std::ostream <span class="hljs-title">file</span><span class="hljs-params">(filename)</span></span>;
+    <span class="hljs-keyword">if</span> (message.<span class="hljs-built_in">length</span>() &gt; <span class="hljs-number">100</span>) {
+        <span class="hljs-keyword">throw</span> std::<span class="hljs-built_in">error</span>(<span class="hljs-string">&quot;Message too big&quot;</span>);
     }
-    file.write(message);
+    file.<span class="hljs-built_in">write</span>(message);
 }
 </code></pre>
 <p>Since the <code>file</code> object is allocated on the stack, if the allocation failed,
@@ -442,8 +442,8 @@ we can build robust systems layer by layer.</p>
         <li id="section-16">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-16">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-16">&#x00a7;</a>
               </div>
               <h2 id="concurrent-error-management">Concurrent error management</h2>
 
@@ -455,8 +455,8 @@ we can build robust systems layer by layer.</p>
         <li id="section-17">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-17">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-17">&#x00a7;</a>
               </div>
               <p>The above cases all treated error management in single-threaded programs.
 When we deal with highly concurrent systems, we need to resort to different
@@ -504,8 +504,8 @@ as effectively as it does.</p>
         <li id="section-18">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-18">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-18">&#x00a7;</a>
               </div>
               <h2 id="contextual-recovery-stratgies">Contextual recovery stratgies</h2>
 
@@ -517,8 +517,8 @@ as effectively as it does.</p>
         <li id="section-19">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-19">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-19">&#x00a7;</a>
               </div>
               <p>We saw how in the C/C++/Java/Javascript language families exceptions propagate
 “up the call stack” until one reaches code that can do something about them.
@@ -557,8 +557,8 @@ is described <a href="https://github.com/srikumarks/muSE/wiki/ExceptionHandling"
         <li id="section-20">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-20">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-20">&#x00a7;</a>
               </div>
               <h2 id="error-management-in-slang">Error management in Slang</h2>
 <p>TODO: Implement Common Lisp-like error handling mechanism in Slang that is

@@ -86,8 +86,8 @@
         <li id="section-1">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-1">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-1">&#x00a7;</a>
               </div>
               
             </div>
@@ -98,8 +98,8 @@
         <li id="section-2">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-2">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-2">&#x00a7;</a>
               </div>
               <h1 id="exports">Exports</h1>
 
@@ -111,8 +111,8 @@
         <li id="section-3">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-3">&#x00a7;</a>
               </div>
               <p>We export the few critical functions we need to run slang.
 <code>env</code> for making environments,
@@ -122,10 +122,10 @@
             </div>
             
             <div class="content"><div class='highlight'><pre><span class="hljs-keyword">try</span> {
-    <span class="hljs-built_in">module</span>.exports = {
-        <span class="hljs-attr">run</span> : run,
+    <span class="hljs-variable language_">module</span>.<span class="hljs-property">exports</span> = {
+        run : run,
         <span class="hljs-attr">parse</span>: parse_slang,
-        <span class="hljs-attr">env</span>: <span class="hljs-function">(<span class="hljs-params">base</span>) =&gt;</span> { <span class="hljs-keyword">return</span> load_stdlib(mk_env(base)); },
+        <span class="hljs-attr">env</span>: <span class="hljs-function">(<span class="hljs-params">base</span>) =&gt;</span> { <span class="hljs-keyword">return</span> <span class="hljs-title function_">load_stdlib</span>(<span class="hljs-title function_">mk_env</span>(base)); },
         <span class="hljs-attr">define</span>: define,
         <span class="hljs-attr">prim</span>: prim,
         <span class="hljs-attr">word</span>: word,

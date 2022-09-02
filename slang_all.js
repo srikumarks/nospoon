@@ -2444,7 +2444,7 @@ stddefs(function (env) {
 // as the application of another more abstract function to `S` - i.e.
 //
 // ```js
-// (function g(a1,a2,...) { return function (S) { .... S .... }; })(S)
+// (function g(a1,a2,...) { return function (S) { .... S .... }; })(a1,a2,...)(S)
 // ```
 //
 // Or to keep it simple, you can just work with a function `g` that is

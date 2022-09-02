@@ -86,8 +86,8 @@
         <li id="section-1">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-1">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-1">&#x00a7;</a>
               </div>
               <h1 id="vocabularies">Vocabularies</h1>
 <p><strong>Date</strong>: 15 March 2017</p>
@@ -100,14 +100,14 @@
         <li id="section-2">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-2">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-2">&#x00a7;</a>
               </div>
               <p>Requires slang.js</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre><span class="hljs-meta">"use strict"</span>;</pre></div></div>
+            <div class="content"><div class='highlight'><pre><span class="hljs-meta">&quot;use strict&quot;</span>;</pre></div></div>
             
         </li>
         
@@ -115,8 +115,8 @@
         <li id="section-3">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-3">&#x00a7;</a>
               </div>
               <p>We’ve thus far done the traditional stuff with scopes. In most languages,
 your power stops pretty much there .. unless you’re using something from
@@ -139,15 +139,16 @@ functions that will work with 2D points as xy coordinates pushed on to the
 stack. We can store away these definitions in a vocabulary and call on them
 only when we need them. We introduce a new type called <code>vocab</code> for this
 purpose.</p>
-<pre><code>block([...]), word(<span class="hljs-string">'vocab'</span>)
-</code></pre><p>When the <code>vocab</code> word is interpreted, we’ll get an object on the stack
+<pre><code><span class="hljs-title function_">block</span>([...]), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;vocab&#x27;</span>)
+</code></pre>
+<p>When the <code>vocab</code> word is interpreted, we’ll get an object on the stack
 that captures all the bindings that were created within the scope of
 the block, in addition to evaluating the block just like <code>do</code> would.</p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>
-<span class="hljs-keyword">let</span> vocab = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">bindings</span>) </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'vocab'</span>, <span class="hljs-attr">v</span>: bindings}; };</pre></div></div>
+<span class="hljs-keyword">let</span> vocab = <span class="hljs-keyword">function</span> (<span class="hljs-params">bindings</span>) { <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">&#x27;vocab&#x27;</span>, <span class="hljs-attr">v</span>: bindings}; };</pre></div></div>
             
         </li>
         
@@ -155,16 +156,16 @@ the block, in addition to evaluating the block just like <code>do</code> would.<
         <li id="section-4">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-4">&#x00a7;</a>
               </div>
               <p>We re-define test_env so that the stdlib becomes a common entity instead
 of being copied over and over.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>test_env = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-    <span class="hljs-keyword">return</span> enter(load_stdlib(mk_env()));
+            <div class="content"><div class='highlight'><pre>test_env = <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+    <span class="hljs-keyword">return</span> <span class="hljs-title function_">enter</span>(<span class="hljs-title function_">load_stdlib</span>(<span class="hljs-title function_">mk_env</span>()));
 };</pre></div></div>
             
         </li>
@@ -173,8 +174,8 @@ of being copied over and over.</p>
         <li id="section-5">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-5">&#x00a7;</a>
               </div>
               <p>When we’re introducing such a “reification” in our system, it is also useful
 to think about what is called the “dual” operation. In our case, <code>vocab</code>
@@ -213,37 +214,37 @@ of an iterator?</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-tests.vocab = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+tests.<span class="hljs-property">vocab</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
     <span class="hljs-keyword">let</span> program = [
-        block([
-            block([
-                block([word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'y2'</span>)]), word(<span class="hljs-string">'args'</span>),
-                word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'-'</span>),
-                word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'-'</span>),
-                word(<span class="hljs-string">'length'</span>)
-            ]), symbol(<span class="hljs-string">'distance'</span>), word(<span class="hljs-string">'defun'</span>),
+        <span class="hljs-title function_">block</span>([
+            <span class="hljs-title function_">block</span>([
+                <span class="hljs-title function_">block</span>([<span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;x1&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;y1&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;x2&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;y2&#x27;</span>)]), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;args&#x27;</span>),
+                <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;x1&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;x2&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;-&#x27;</span>),
+                <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;y1&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;y2&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;-&#x27;</span>),
+                <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;length&#x27;</span>)
+            ]), <span class="hljs-title function_">symbol</span>(<span class="hljs-string">&#x27;distance&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;defun&#x27;</span>),
 
-            block([
-                block([word(<span class="hljs-string">'dx'</span>), word(<span class="hljs-string">'dy'</span>)]), word(<span class="hljs-string">'args'</span>),
-                word(<span class="hljs-string">'dx'</span>), word(<span class="hljs-string">'dy'</span>), word(<span class="hljs-string">'dx'</span>), word(<span class="hljs-string">'dy'</span>), word(<span class="hljs-string">'dot'</span>),
-                word(<span class="hljs-string">'sqrt'</span>)
-            ]), symbol(<span class="hljs-string">'length'</span>), word(<span class="hljs-string">'defun'</span>),
+            <span class="hljs-title function_">block</span>([
+                <span class="hljs-title function_">block</span>([<span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;dx&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;dy&#x27;</span>)]), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;args&#x27;</span>),
+                <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;dx&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;dy&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;dx&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;dy&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;dot&#x27;</span>),
+                <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;sqrt&#x27;</span>)
+            ]), <span class="hljs-title function_">symbol</span>(<span class="hljs-string">&#x27;length&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;defun&#x27;</span>),
             
-            block([
-                block([word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'y2'</span>)]), word(<span class="hljs-string">'args'</span>),
-                word(<span class="hljs-string">'x1'</span>), word(<span class="hljs-string">'x2'</span>), word(<span class="hljs-string">'*'</span>),
-                word(<span class="hljs-string">'y1'</span>), word(<span class="hljs-string">'y2'</span>), word(<span class="hljs-string">'*'</span>),
-                word(<span class="hljs-string">'+'</span>)
-            ]), symbol(<span class="hljs-string">'dot'</span>), word(<span class="hljs-string">'defun'</span>)
-        ]), word(<span class="hljs-string">'vocab'</span>), symbol(<span class="hljs-string">'point'</span>), word(<span class="hljs-string">'def'</span>),
+            <span class="hljs-title function_">block</span>([
+                <span class="hljs-title function_">block</span>([<span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;x1&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;y1&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;x2&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;y2&#x27;</span>)]), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;args&#x27;</span>),
+                <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;x1&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;x2&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;*&#x27;</span>),
+                <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;y1&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;y2&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;*&#x27;</span>),
+                <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;+&#x27;</span>)
+            ]), <span class="hljs-title function_">symbol</span>(<span class="hljs-string">&#x27;dot&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;defun&#x27;</span>)
+        ]), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;vocab&#x27;</span>), <span class="hljs-title function_">symbol</span>(<span class="hljs-string">&#x27;point&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;def&#x27;</span>),
 
-        block([
-            word(<span class="hljs-string">'point'</span>), word(<span class="hljs-string">'use'</span>),
-            number(<span class="hljs-number">2</span>), number(<span class="hljs-number">3</span>), number(<span class="hljs-number">5</span>), number(<span class="hljs-number">7</span>), word(<span class="hljs-string">'distance'</span>)
-        ]), word(<span class="hljs-string">'do'</span>)
+        <span class="hljs-title function_">block</span>([
+            <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;point&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;use&#x27;</span>),
+            <span class="hljs-title function_">number</span>(<span class="hljs-number">2</span>), <span class="hljs-title function_">number</span>(<span class="hljs-number">3</span>), <span class="hljs-title function_">number</span>(<span class="hljs-number">5</span>), <span class="hljs-title function_">number</span>(<span class="hljs-number">7</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;distance&#x27;</span>)
+        ]), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;do&#x27;</span>)
     ];
 
-    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, []);
+    <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(<span class="hljs-title function_">test_env</span>(), program, <span class="hljs-number">0</span>, []);
 };</pre></div></div>
             
         </li>
@@ -252,14 +253,14 @@ tests.vocab = <span class="hljs-function"><span class="hljs-keyword">function</s
         <li id="section-6">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-6">&#x00a7;</a>
               </div>
               <p>Now for the definitions of <code>vocab</code> and <code>use</code>.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+            <div class="content"><div class='highlight'><pre><span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {</pre></div></div>
             
         </li>
         
@@ -267,8 +268,8 @@ tests.vocab = <span class="hljs-function"><span class="hljs-keyword">function</s
         <li id="section-7">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-7">&#x00a7;</a>
               </div>
               <p><code>vocab</code> needs to run the block on the stack just like
 <code>do</code> does, except that before the local environment of the
@@ -277,9 +278,9 @@ hash and stored away as part of the vocabulary.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'vocab'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> defs = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(defs.t === <span class="hljs-string">'block'</span>);</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;vocab&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> defs = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(defs.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;block&#x27;</span>);</pre></div></div>
             
         </li>
         
@@ -287,18 +288,18 @@ hash and stored away as part of the vocabulary.</p>
         <li id="section-8">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-8">&#x00a7;</a>
               </div>
               <p>Execute the block and capture its definitions before
 we leave it.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        enter(env);
-        stack = run(env, defs.v, <span class="hljs-number">0</span>, stack);
-        <span class="hljs-keyword">let</span> bindings = copy_bindings(current_bindings(env), {});
-        leave(env);</pre></div></div>
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-title function_">enter</span>(env);
+        stack = <span class="hljs-title function_">run</span>(env, defs.<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, stack);
+        <span class="hljs-keyword">let</span> bindings = <span class="hljs-title function_">copy_bindings</span>(<span class="hljs-title function_">current_bindings</span>(env), {});
+        <span class="hljs-title function_">leave</span>(env);</pre></div></div>
             
         </li>
         
@@ -306,8 +307,8 @@ we leave it.</p>
         <li id="section-9">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-9">&#x00a7;</a>
               </div>
               <p>We don’t want to preserve the scope chain in this case, so
 delete the parent scope entry.</p>
@@ -316,7 +317,7 @@ delete the parent scope entry.</p>
             
             <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">delete</span> bindings[parent_scope_key];
 
-        <span class="hljs-keyword">return</span> push(stack, vocab(bindings));
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">push</span>(stack, <span class="hljs-title function_">vocab</span>(bindings));
     }));</pre></div></div>
             
         </li>
@@ -325,8 +326,8 @@ delete the parent scope entry.</p>
         <li id="section-10">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-10">&#x00a7;</a>
               </div>
               <p>The way we’re implementing <code>use</code>, the vocabulary is
 “immutable” - i.e. you cannot change the bindings
@@ -338,11 +339,11 @@ in effect. So the effect of <code>use</code> is said to be
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">'use'</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) </span>{
-        <span class="hljs-keyword">let</span> vocab = pop(stack);
-        <span class="hljs-built_in">console</span>.assert(vocab.t === <span class="hljs-string">'vocab'</span>);
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&#x27;use&#x27;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack</span>) {
+        <span class="hljs-keyword">let</span> vocab = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(vocab.<span class="hljs-property">t</span> === <span class="hljs-string">&#x27;vocab&#x27;</span>);
 
-        copy_bindings(vocab.v, current_bindings(env));
+        <span class="hljs-title function_">copy_bindings</span>(vocab.<span class="hljs-property">v</span>, <span class="hljs-title function_">current_bindings</span>(env));
         <span class="hljs-keyword">return</span> stack;
     }));
 });</pre></div></div>
@@ -353,8 +354,8 @@ in effect. So the effect of <code>use</code> is said to be
         <li id="section-11">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-11">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Concept</strong>: Such a “vocabulary” is equivalent to “modules” or “packages” in
@@ -375,8 +376,8 @@ vocabulary.</p>
         <li id="section-12">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-12">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Question</strong>: How would you implement a “mutable” vocabulary in <em>slang</em>?</p>
@@ -390,8 +391,8 @@ vocabulary.</p>
         <li id="section-13">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-13">&#x00a7;</a>
               </div>
               <h2 id="the-structure-of-vocabularies">The structure of vocabularies</h2>
 
@@ -403,8 +404,8 @@ vocabulary.</p>
         <li id="section-14">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-14">&#x00a7;</a>
               </div>
               <p>While it looks like we’ve introduced the “vocabulary” concept to illustrate
 that we can now play with scope in our language, we’ve already done what would
@@ -421,8 +422,9 @@ values into the function scope.</p>
 the current scope. This means we can invoke more than one vocabulary and have them
 all combine in the order of invocation. If this were itself within a block, then
 we can use that block to define a new vocabulary, like this -</p>
-<pre><code>block([word(<span class="hljs-string">'a'</span>), word(<span class="hljs-string">'use'</span>), word(<span class="hljs-string">'b'</span>), word(<span class="hljs-string">'use'</span>)]), word(<span class="hljs-string">'vocab'</span>)
-</code></pre><p>This gives us a kind of “inheritance” like the way object oriented languages
+<pre><code><span class="hljs-title function_">block</span>([<span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;a&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;use&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;b&#x27;</span>), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;use&#x27;</span>)]), <span class="hljs-title function_">word</span>(<span class="hljs-string">&#x27;vocab&#x27;</span>)
+</code></pre>
+<p>This gives us a kind of “inheritance” like the way object oriented languages
 combine classes to form new ones. </p>
 <p>(3) is a consequence of the way we chose to define our vocabularies - by 
 evaluating blocks. This means we can formulate a vocabulary that uses

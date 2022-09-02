@@ -86,8 +86,8 @@
         <li id="section-1">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-1">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-1">&#x00a7;</a>
               </div>
               <h1 id="non-deterministic-programming">Non-deterministic programming</h1>
 
@@ -99,8 +99,8 @@
         <li id="section-2">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-2">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-2">&#x00a7;</a>
               </div>
               <p><strong>Date</strong>: 18 Apri 2017</p>
 
@@ -112,8 +112,8 @@
         <li id="section-3">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-3">&#x00a7;</a>
               </div>
               <p>(Requires slang_concurrency.js and whatever it requires.)</p>
 
@@ -125,8 +125,8 @@
         <li id="section-4">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-4">&#x00a7;</a>
               </div>
               <p>Now that we have control over control flow within “processes”,
 we can start to play with it in ways we couldn’t imagine doing
@@ -142,7 +142,7 @@ another choice.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-<span class="hljs-keyword">let</span> failure = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">val</span>) </span>{ <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">'fail'</span>, <span class="hljs-attr">v</span>: val}; };</pre></div></div>
+<span class="hljs-keyword">let</span> failure = <span class="hljs-keyword">function</span> (<span class="hljs-params">val</span>) { <span class="hljs-keyword">return</span> {<span class="hljs-attr">t</span>: <span class="hljs-string">&#x27;fail&#x27;</span>, <span class="hljs-attr">v</span>: val}; };</pre></div></div>
             
         </li>
         
@@ -150,15 +150,15 @@ another choice.</p>
         <li id="section-5">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-5">&#x00a7;</a>
               </div>
               <h2 id="the-choose-and-fail-operators">The <code>choose</code> and <code>fail</code> operators</h2>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>
-stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) </span>{</pre></div></div>
+<span class="hljs-title function_">stddefs</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env</span>) {</pre></div></div>
             
         </li>
         
@@ -166,8 +166,8 @@ stddefs(<span class="hljs-function"><span class="hljs-keyword">function</span> (
         <li id="section-6">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-6">&#x00a7;</a>
               </div>
               <p>The main ingredients of non-deterministic programming
 are a “choose” operator which choose one of several code
@@ -199,18 +199,18 @@ choice tree for possible solutions.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>   define(env, <span class="hljs-string">"choose"</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> options = pop(stack);
-        <span class="hljs-keyword">let</span> proc = stack.process;
+            <div class="content"><div class='highlight'><pre>   <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&quot;choose&quot;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">let</span> options = <span class="hljs-title function_">pop</span>(stack);
+        <span class="hljs-keyword">let</span> proc = stack.<span class="hljs-property">process</span>;
 
-        <span class="hljs-built_in">console</span>.assert(callback);
-        <span class="hljs-built_in">console</span>.assert(options.t === <span class="hljs-string">"block"</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(callback);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">assert</span>(options.<span class="hljs-property">t</span> === <span class="hljs-string">&quot;block&quot;</span>);
 
-        <span class="hljs-keyword">if</span> (!proc.choice_points) {
-            proc.choice_points = [];
+        <span class="hljs-keyword">if</span> (!proc.<span class="hljs-property">choice_points</span>) {
+            proc.<span class="hljs-property">choice_points</span> = [];
         }
 
-        <span class="hljs-keyword">let</span> current_env = mk_env(env);</pre></div></div>
+        <span class="hljs-keyword">let</span> current_env = <span class="hljs-title function_">mk_env</span>(env);</pre></div></div>
             
         </li>
         
@@ -218,8 +218,8 @@ choice tree for possible solutions.</p>
         <li id="section-7">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-7">&#x00a7;</a>
               </div>
               <p>We model “making a choice” as a function that takes a single
 integer value representing which option among the ones it has
@@ -230,10 +230,10 @@ points.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        proc.choice_points.push({
+            <div class="content"><div class='highlight'><pre>        proc.<span class="hljs-property">choice_points</span>.<span class="hljs-title function_">push</span>({
             <span class="hljs-attr">i</span>: <span class="hljs-number">0</span>,
-            <span class="hljs-attr">count</span>: options.v.length,
-            <span class="hljs-attr">fn</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">i</span>) </span>{</pre></div></div>
+            <span class="hljs-attr">count</span>: options.<span class="hljs-property">v</span>.<span class="hljs-property">length</span>,
+            <span class="hljs-attr">fn</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">i</span>) {</pre></div></div>
             
         </li>
         
@@ -241,17 +241,17 @@ points.</p>
         <li id="section-8">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-8">&#x00a7;</a>
               </div>
               <p>Fresh environment and stack, discarding all the
 other things possibly accumulated in prior choices.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">let</span> cp_env = mk_env(current_env);
-                <span class="hljs-keyword">let</span> cp_stack = stack.slice(<span class="hljs-number">0</span>);
-                cp_stack.process = stack.process;</pre></div></div>
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">let</span> cp_env = <span class="hljs-title function_">mk_env</span>(current_env);
+                <span class="hljs-keyword">let</span> cp_stack = stack.<span class="hljs-title function_">slice</span>(<span class="hljs-number">0</span>);
+                cp_stack.<span class="hljs-property">process</span> = stack.<span class="hljs-property">process</span>;</pre></div></div>
             
         </li>
         
@@ -259,16 +259,16 @@ other things possibly accumulated in prior choices.</p>
         <li id="section-9">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-9">&#x00a7;</a>
               </div>
               <p>If given a block, we evaluate it. If given
 any other normal value, we push it on to the stack.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">if</span> (options.v[i].t === <span class="hljs-string">"block"</span>) {
-                    run(cp_env, options.v[i].v, <span class="hljs-number">0</span>, cp_stack, callback);</pre></div></div>
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">if</span> (options.<span class="hljs-property">v</span>[i].<span class="hljs-property">t</span> === <span class="hljs-string">&quot;block&quot;</span>) {
+                    <span class="hljs-title function_">run</span>(cp_env, options.<span class="hljs-property">v</span>[i].<span class="hljs-property">v</span>, <span class="hljs-number">0</span>, cp_stack, callback);</pre></div></div>
             
         </li>
         
@@ -276,8 +276,8 @@ any other normal value, we push it on to the stack.</p>
         <li id="section-10">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-10">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Question</strong>: What happens if the block we’re running
@@ -290,12 +290,12 @@ behaviour may result?</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>                } <span class="hljs-keyword">else</span> {
-                    callback(push(stack, options.v[i]));
+                    <span class="hljs-title function_">callback</span>(<span class="hljs-title function_">push</span>(stack, options.<span class="hljs-property">v</span>[i]));
                 }
             }
         });
         
-        <span class="hljs-keyword">return</span> back_track(stack, callback);
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">back_track</span>(stack, callback);
     }));</pre></div></div>
             
         </li>
@@ -304,8 +304,8 @@ behaviour may result?</p>
         <li id="section-11">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-11">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Question</strong>: How will you implement a “breadth-first”
@@ -325,8 +325,8 @@ operator to use the breadth-first strategy.</p>
         <li id="section-12">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-12">&#x00a7;</a>
               </div>
               <p>Our <code>fail</code> operator just triggers the back tracking mechanism
 to try alternative choices. Typically, you’d use <code>fail</code> within
@@ -335,8 +335,8 @@ when some condition isn’t met.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    define(env, <span class="hljs-string">"fail"</span>, prim(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) </span>{
-        <span class="hljs-keyword">return</span> later(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{ back_track(stack, callback); }, stack);
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-title function_">define</span>(env, <span class="hljs-string">&quot;fail&quot;</span>, <span class="hljs-title function_">prim</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">env, stack, callback</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) { <span class="hljs-title function_">back_track</span>(stack, callback); }, stack);
     }));</pre></div></div>
             
         </li>
@@ -345,8 +345,8 @@ when some condition isn’t met.</p>
         <li id="section-13">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-13">&#x00a7;</a>
               </div>
               <h2 id="depth-first-back-tracking">Depth-first back tracking</h2>
 <p>The act of picking a choice involves checking a
@@ -356,9 +356,9 @@ choice points … at which point we give up.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">back_track</span>(<span class="hljs-params">stack, callback</span>) </span>{
-        <span class="hljs-keyword">let</span> proc = stack.process;
-        <span class="hljs-keyword">if</span> (proc.choice_points.length === <span class="hljs-number">0</span>) {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">function</span> <span class="hljs-title function_">back_track</span>(<span class="hljs-params">stack, callback</span>) {
+        <span class="hljs-keyword">let</span> proc = stack.<span class="hljs-property">process</span>;
+        <span class="hljs-keyword">if</span> (proc.<span class="hljs-property">choice_points</span>.<span class="hljs-property">length</span> === <span class="hljs-number">0</span>) {</pre></div></div>
             
         </li>
         
@@ -366,20 +366,20 @@ choice points … at which point we give up.</p>
         <li id="section-14">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-14">&#x00a7;</a>
               </div>
               <p>All choices exhausted. Whole program failure.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">return</span> later(callback, push(stack, failure(symbol(<span class="hljs-string">'choose'</span>))));
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">return</span> <span class="hljs-title function_">later</span>(callback, <span class="hljs-title function_">push</span>(stack, <span class="hljs-title function_">failure</span>(<span class="hljs-title function_">symbol</span>(<span class="hljs-string">&#x27;choose&#x27;</span>))));
         }
 
-        <span class="hljs-keyword">let</span> choice_point = proc.choice_points[proc.choice_points.length - <span class="hljs-number">1</span>];
-        <span class="hljs-keyword">if</span> (choice_point.i &lt; choice_point.count) {
-            later(choice_point.fn, choice_point.i);
-            choice_point.i++;</pre></div></div>
+        <span class="hljs-keyword">let</span> choice_point = proc.<span class="hljs-property">choice_points</span>[proc.<span class="hljs-property">choice_points</span>.<span class="hljs-property">length</span> - <span class="hljs-number">1</span>];
+        <span class="hljs-keyword">if</span> (choice_point.<span class="hljs-property">i</span> &lt; choice_point.<span class="hljs-property">count</span>) {
+            <span class="hljs-title function_">later</span>(choice_point.<span class="hljs-property">fn</span>, choice_point.<span class="hljs-property">i</span>);
+            choice_point.<span class="hljs-property">i</span>++;</pre></div></div>
             
         </li>
         
@@ -387,8 +387,8 @@ choice points … at which point we give up.</p>
         <li id="section-15">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-15">&#x00a7;</a>
               </div>
               <p>If we’ve initiated the last choice, we might
 as well remove the choice point from the back tracking
@@ -399,13 +399,13 @@ history right away.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span> (choice_point.i &gt;= choice_point.count) {
-                proc.choice_points.pop();
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span> (choice_point.<span class="hljs-property">i</span> &gt;= choice_point.<span class="hljs-property">count</span>) {
+                proc.<span class="hljs-property">choice_points</span>.<span class="hljs-title function_">pop</span>();
             }
         } <span class="hljs-keyword">else</span> {
-            proc.choice_points.pop(); <span class="hljs-comment">// Choices exhausted.</span>
-            later(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-                back_track(stack, callback);
+            proc.<span class="hljs-property">choice_points</span>.<span class="hljs-title function_">pop</span>(); <span class="hljs-comment">// Choices exhausted.</span>
+            <span class="hljs-title function_">later</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+                <span class="hljs-title function_">back_track</span>(stack, callback);
             });
         }
 
@@ -419,8 +419,8 @@ history right away.</p>
         <li id="section-16">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-16">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-16">&#x00a7;</a>
               </div>
               <h2 id="tests">Tests</h2>
 
@@ -432,8 +432,8 @@ history right away.</p>
         <li id="section-17">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-17">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-17">&#x00a7;</a>
               </div>
               <h3 id="test-constraints-on-two-choice-points">Test: Constraints on two choice points</h3>
 
@@ -445,8 +445,8 @@ history right away.</p>
         <li id="section-18">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-18">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-18">&#x00a7;</a>
               </div>
               <p>This code creates two choice points and the rest of the program
 decides to fail if the numbers chosen by these choice points don’t
@@ -455,19 +455,19 @@ satisfy some numeric criteria.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>
-tests.two_constraints = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-    <span class="hljs-keyword">let</span> program = parse_slang(<span class="hljs-string">`
+tests.<span class="hljs-property">two_constraints</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+    <span class="hljs-keyword">let</span> program = <span class="hljs-title function_">parse_slang</span>(<span class="hljs-string">`
         [1 2 3 4 5] choose :x def
         [1 2 3 4 5] choose :y def
         x y + 5 &lt; [fail] if
         x print y print
         x y * 15 &lt; [fail] if
-        "result" print
+        &quot;result&quot; print
         x print y print
     `</span>);
 
-    <span class="hljs-keyword">return</span> run(test_env(), program, <span class="hljs-number">0</span>, [], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"done"</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-title function_">run</span>(<span class="hljs-title function_">test_env</span>(), program, <span class="hljs-number">0</span>, [], <span class="hljs-keyword">function</span> (<span class="hljs-params">stack</span>) {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;done&quot;</span>);
     });
 };</pre></div></div>
             
@@ -477,13 +477,15 @@ tests.two_constraints = <span class="hljs-function"><span class="hljs-keyword">f
         <li id="section-19">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-19">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-19">&#x00a7;</a>
               </div>
               <blockquote>
 <p><strong>Question</strong>: How will you implement an operator that collects
 all possible “solutions” in the above example instead of just
 picking one?</p>
+</blockquote>
+<blockquote>
 <p><strong>Question</strong>: Can you write a “choice point generator” that will
 try all natural numbers? How would you prevent the generation of
 infinite useless choices to try?</p>
@@ -497,8 +499,8 @@ infinite useless choices to try?</p>
         <li id="section-20">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-20">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-20">&#x00a7;</a>
               </div>
               <h2 id="non-determinism-and-data-flow-variables">Non-determinism and data-flow-variables</h2>
 
@@ -510,8 +512,8 @@ infinite useless choices to try?</p>
         <li id="section-21">
             <div class="annotation">
               
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-21">&#182;</a>
+              <div class="sswrap ">
+                <a class="ss" href="#section-21">&#x00a7;</a>
               </div>
               <p>We specified “data flow variables” to be analogous to boxes
 that can be filled only once with a value. If we introduce choice
